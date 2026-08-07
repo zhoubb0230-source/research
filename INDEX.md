@@ -2,13 +2,13 @@
 
 AI 先进技术调研知识库的一级入口。**先在这里定位领域，再进入领域索引，最后打开正文。**
 
-最后更新：2026-08-05
+最后更新：2026-08-07
 
 ## 领域一览
 
 | 领域 ID | 名称 | 范围 | 索引 | 条目数 |
 |---|---|---|---|---|
-| `agent-platform` | 智能体平台 | Agent 框架/编排/运行时、多智能体协作、工具与记忆、平台化产品（Dify、Coze、Bedrock Agents 等） | [domains/agent-platform/INDEX.md](domains/agent-platform/INDEX.md) | 0 |
+| `agent-platform` | 智能体平台 | Agent 框架/编排/运行时、多智能体协作、工具与记忆、平台化产品（Dify、Coze、Bedrock Agents 等） | [domains/agent-platform/INDEX.md](domains/agent-platform/INDEX.md) | 2 |
 | `ai-coding` | AI Coding 工具 | 编码助手与 Agent（Claude Code、Cursor、Copilot 等）、代码生成/评测、研发流程集成 | [domains/ai-coding/INDEX.md](domains/ai-coding/INDEX.md) | 0 |
 
 ## 跨领域索引
@@ -21,7 +21,9 @@ AI 先进技术调研知识库的一级入口。**先在这里定位领域，再
 
 | 日期 | 领域 | 条目 | 变更 |
 |---|---|---|---|
-| 2026-08-05 | — | — | 初始化仓库骨架 |
+| 2026-08-07 | agent-platform | agent-platform-solution-0001 | 新增《数字员工平台设计方案》 |
+| 2026-08-07 | agent-platform | agent-platform-insight-0001 | 新增《企业级 Agent 的身份、授权与数据隔离：九个业界范式》 |
+| 2026-08-07 | — | — | 初始化仓库骨架 |
 
 ## 维护说明
 

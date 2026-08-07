@@ -39,13 +39,13 @@
 标签用小写英文短横线，**新增标签必须登记到本节**，避免同义词发散。
 
 ### 技术主题
-`orchestration` `multi-agent` `tool-use` `mcp` `memory` `context-engineering` `rag` `runtime` `sandbox` `observability` `eval` `guardrail` `cost-optimization`
+`orchestration` `multi-agent` `tool-use` `mcp` `memory` `context-engineering` `rag` `runtime` `sandbox` `observability` `eval` `guardrail` `cost-optimization` `identity` `authz` `data-isolation` `audit`
 
 ### 编码场景
 `ide-assistant` `coding-agent` `cli-agent` `code-review` `test-gen` `repo-understanding` `benchmark` `devex-metrics`
 
 ### 视角
-`market-landscape` （竞品格局）· `tech-route` （技术路线）· `architecture` （架构设计）· `selection` （选型）· `landing` （落地实施）· `pricing` （商业与定价）· `security` （安全合规）
+`market-landscape` （竞品格局）· `tech-route` （技术路线）· `architecture` （架构设计）· `selection` （选型）· `landing` （落地实施）· `enterprise-landing` （企业级落地）· `pricing` （商业与定价）· `security` （安全合规）
 
 ### 成熟度
 `emerging` （早期）· `mainstream` （主流）· `deprecated` （已淘汰）
@@ -55,7 +55,14 @@
 统一使用小写短名，避免中英文混用导致检索失效。**新增产品必须登记到本节。**
 
 ### 智能体平台
-`dify` `coze` `langgraph` `langchain` `llamaindex` `autogen` `crewai` `bedrock-agents` `vertex-agent` `azure-ai-foundry` `n8n` `flowise` `bailian`（阿里百炼）`tencent-agent`
+`dify` `coze` `coze-studio` `langgraph` `langchain` `llamaindex` `autogen` `crewai` `bedrock-agents` `vertex-agent` `azure-ai-foundry` `n8n` `flowise` `bailian`（阿里百炼）`tencent-agent`
+
+### 企业级 Agent 治理与基础设施
+- 身份与授权：`entra-agent-id`（Microsoft Entra Agent ID / Agent 365）`keycloak` `openfga` `cedar` `spicedb` `okta-xaa`（Cross-App Access / ID-JAG）
+- 网关：`agentgateway`
+- 流程引擎：`camunda` `flowable` `activiti` `temporal`
+- 企业 AI 应用与检索：`agentforce`（Salesforce）`glean` `m365-copilot`
+- 数据与可观测：`milvus` `pgvector` `langfuse` `cozeloop` `promptfoo`
 
 ### AI Coding
 `claude-code` `cursor` `github-copilot` `windsurf` `cline` `aider` `devin` `codex` `lingma`（通义灵码）`comate`（百度）`trae`

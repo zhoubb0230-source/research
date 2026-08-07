@@ -4,7 +4,7 @@
 **不含**：通用 Agent 平台机制（见 [agent-platform](../agent-platform/INDEX.md)）。
 详见 [docs/taxonomy.md](../../docs/taxonomy.md#ai-coding--ai-coding-工具)。
 
-最后更新：2026-08-05 ｜ 条目数：0
+最后更新：2026-08-07 ｜ 条目数：0
 
 ## 业界洞察 · insights/
 
