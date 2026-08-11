@@ -4,25 +4,25 @@
 **不含**：通用 Agent 平台机制（见 [agent-platform](../agent-platform/INDEX.md)）。
 详见 [docs/taxonomy.md](../../docs/taxonomy.md#ai-coding--ai-coding-工具)。
 
-最后更新：2026-08-07 ｜ 条目数：0
+最后更新：2026-08-11 ｜ 条目数：3
 
 ## 业界洞察 · insights/
 
 | ID | 标题 | 摘要 | 标签 | 状态 | 更新 |
 |---|---|---|---|---|---|
-| _暂无_ | | | | | |
+| [ai-coding-insight-0001](insights/2026-08-11-cli-coding-agent-landscape.md) | CLI 形态 AI Coding 工具的技术路线与企业化差距 | CLI Agent 分三条路线；中立内核在能力上必然滞后，企业价值在治理、私有上下文与流程闭环 | cli-agent, market-landscape, tech-route, guardrail, observability | review | 2026-08-11 |
 
 ## 方案设计 · solutions/
 
 | ID | 标题 | 摘要 | 标签 | 状态 | 更新 |
 |---|---|---|---|---|---|
-| _暂无_ | | | | | |
+| [ai-coding-solution-0001](solutions/2026-08-11-opencode-enterprise-customization-roadmap.md) | 基于 opencode 的公司内 AI Coding 工具定制特性路线 | 定制按四层分配，P0 补治理与接入、P1 补可观测与私有上下文，编排交给上游 | cli-agent, architecture, landing, enterprise-landing, sandbox | draft | 2026-08-11 |
 
 ## 产品档案 · vendors/
 
 | ID | 产品 | 定位 | 厂商 | 状态 | 核对日期 |
 |---|---|---|---|---|---|
-| _暂无_ | | | | | |
+| [ai-coding-vendor-0001](vendors/opencode.md) | opencode | MIT 开源、模型中立的终端编码 Agent，客户端/服务端分离，是二次开发的主流内核 | anomalyco（原 SST） | stable | 2026-08-11 |
 
 ## 选题池
 
@@ -33,6 +33,9 @@
 - AI 参与 Code Review 与测试生成的落地形态
 - 编码 Agent 的评测基准与真实效能度量方式
 - 企业内推广 AI Coding 的落地方案（权限、合规、度量、培训）
+- Claude Code 产品档案（作为企业管控能力的对标基线）
+- MiMo Code 产品档案（opencode 下游 fork 的定制做法拆解）
+- 编码 Agent 的 OS 级沙箱方案对比（容器 / devcontainer / Seatbelt·Landlock）
 
 ## 维护
 

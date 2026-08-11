@@ -42,7 +42,7 @@
 `orchestration` `multi-agent` `tool-use` `mcp` `memory` `context-engineering` `rag` `runtime` `sandbox` `observability` `eval` `guardrail` `cost-optimization` `identity` `authz` `data-isolation` `audit`
 
 ### 编码场景
-`ide-assistant` `coding-agent` `cli-agent` `code-review` `test-gen` `repo-understanding` `benchmark` `devex-metrics`
+`ide-assistant` `coding-agent` `cli-agent` `code-review` `test-gen` `repo-understanding` `benchmark` `devex-metrics` `agent-skills` （技能/SKILL.md 机制）· `plugin-ecosystem` （插件与扩展分发）
 
 ### 视角
 `market-landscape` （竞品格局）· `tech-route` （技术路线）· `architecture` （架构设计）· `selection` （选型）· `landing` （落地实施）· `enterprise-landing` （企业级落地）· `pricing` （商业与定价）· `security` （安全合规）
@@ -65,7 +65,10 @@
 - 数据与可观测：`milvus` `pgvector` `langfuse` `cozeloop` `promptfoo`
 
 ### AI Coding
-`claude-code` `cursor` `github-copilot` `windsurf` `cline` `aider` `devin` `codex` `lingma`（通义灵码）`comate`（百度）`trae`
+- IDE 形态：`cursor` `github-copilot` `windsurf` `cline` `devin` `lingma`（通义灵码）`comate`（百度）`trae`
+- CLI 形态（模型厂自营）：`claude-code` `codex`（OpenAI Codex CLI）`antigravity`（Google Antigravity CLI）`gemini-cli`（已于 2026-06-18 停服，仅作历史引用）
+- CLI 形态（中立开源内核）：`opencode` `crush`（Charm）`aider` `amp`（Sourcegraph）`kilo`
+- CLI 形态（基于中立内核的厂内二次开发）：`mimo-code`（小米，fork 自 opencode）`qwen-code`（阿里，fork 自 gemini-cli）
 
 ## 5. 状态（status）
 
