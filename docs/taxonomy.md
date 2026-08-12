@@ -39,9 +39,11 @@
 标签用小写英文短横线，**新增标签必须登记到本节**，避免同义词发散。
 
 ### 技术主题
-`orchestration` `multi-agent` `tool-use` `mcp` `memory` `context-engineering` `rag` `runtime` `sandbox` `observability` `eval` `guardrail` `cost-optimization` `identity` `authz` `data-isolation` `audit`
+`orchestration` `multi-agent` `tool-use` `mcp` `memory` `context-engineering` `memory-middleware` `rag` `runtime` `sandbox` `observability` `eval` `guardrail` `cost-optimization` `identity` `authz` `data-isolation` `audit`
 
 > `memory`（跨会话持久记忆）与 `context-engineering`（会话内上下文构成与调度：指令加载、压缩、剪枝、预算）是两件事，不要混用。判定见 `ai-coding-insight-0002` 的六层框架。
+>
+> `memory-middleware` 专指**外挂式**记忆层产品（OpenViking、Mem0、Zep 等独立于宿主 Agent 的中间件）；宿主 Agent 自己内建的记忆用 `memory`。两者的横向格局见 `ai-coding-insight-0003`。
 
 ### 编码场景
 `ide-assistant` `coding-agent` `cli-agent` `code-review` `test-gen` `repo-understanding` `benchmark` `devex-metrics` `agent-skills` （技能/SKILL.md 机制）· `plugin-ecosystem` （插件与扩展分发）
@@ -65,6 +67,12 @@
 - 流程引擎：`camunda` `flowable` `activiti` `temporal`
 - 企业 AI 应用与检索：`agentforce`（Salesforce）`glean` `m365-copilot`
 - 数据与可观测：`milvus` `pgvector` `langfuse` `cozeloop` `promptfoo`
+- 记忆中间件（外挂式记忆/上下文层，跨领域，编码场景的横评见 `ai-coding-insight-0003`）：
+  - 分层文件系统路线：`openviking`（火山引擎）
+  - 事实抽取 + 向量路线：`mem0` `openmemory`（Mem0 的 local-first MCP 服务）`supermemory`
+  - 知识图谱路线：`zep` `graphiti`（Zep 的图引擎）`cognee`
+  - 有状态运行时路线：`letta`（原 MemGPT）
+  - 编码场景专用封装：`byterover-cipher`（原 Cipher，现 byterover-cli）`claude-mem`
 
 ### AI Coding
 - IDE 形态：`cursor` `github-copilot` `windsurf` `cline` `devin` `lingma`（通义灵码）`comate`（百度）`trae`
