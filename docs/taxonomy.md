@@ -65,7 +65,7 @@
 - 数据与可观测：`milvus` `pgvector` `langfuse` `cozeloop` `promptfoo`
 
 ### AI Coding
-`claude-code` `cursor` `github-copilot` `windsurf` `cline` `aider` `devin` `codex` `lingma`（通义灵码）`comate`（百度）`trae`
+`claude-code` `cursor` `github-copilot` `windsurf` `cline` `aider` `devin` `codex` `lingma`（通义灵码）`comate`（百度）`trae` `opencode`（sst/opencode）`gemini-cli`
 
 ## 5. 状态（status）
 
