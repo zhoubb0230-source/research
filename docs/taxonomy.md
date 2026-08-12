@@ -44,6 +44,9 @@
 ### 编码场景
 `ide-assistant` `coding-agent` `cli-agent` `code-review` `test-gen` `repo-understanding` `benchmark` `devex-metrics`
 
+### 编程范式与工装
+`spec-driven` （规格驱动开发）· `verification` （验证驱动 / 可验证边界）· `harness-engineering` （工装工程：围绕模型配置的全套机制）· `repo-shape` （为 Agent 优化的仓库与代码形态）
+
 ### 视角
 `market-landscape` （竞品格局）· `tech-route` （技术路线）· `architecture` （架构设计）· `selection` （选型）· `landing` （落地实施）· `enterprise-landing` （企业级落地）· `pricing` （商业与定价）· `security` （安全合规）
 
@@ -65,7 +68,10 @@
 - 数据与可观测：`milvus` `pgvector` `langfuse` `cozeloop` `promptfoo`
 
 ### AI Coding
-`claude-code` `cursor` `github-copilot` `windsurf` `cline` `aider` `devin` `codex` `lingma`（通义灵码）`comate`（百度）`trae` `opencode`（sst/opencode）`gemini-cli`
+`claude-code` `cursor` `github-copilot` `windsurf` `cline` `aider` `devin` `codex` `lingma`（通义灵码）`comate`（百度）`trae` `opencode`（sst/opencode）`gemini-cli` `codebuddy`（腾讯云）`codegeex`（智谱）
+
+### AI Coding 方法论工具链
+`spec-kit`（GitHub Spec Kit）`kiro`（AWS Kiro）`openspec`（Fission-AI/OpenSpec）`bmad`（BMAD-METHOD）`tessl`（Tessl Framework / Spec Registry）
 
 ## 5. 状态（status）
 

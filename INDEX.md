@@ -9,7 +9,7 @@ AI 先进技术调研知识库的一级入口。**先在这里定位领域，再
 | 领域 ID | 名称 | 范围 | 索引 | 条目数 |
 |---|---|---|---|---|
 | `agent-platform` | 智能体平台 | Agent 框架/编排/运行时、多智能体协作、工具与记忆、平台化产品（Dify、Coze、Bedrock Agents 等） | [domains/agent-platform/INDEX.md](domains/agent-platform/INDEX.md) | 2 |
-| `ai-coding` | AI Coding 工具 | 编码助手与 Agent（Claude Code、Cursor、Copilot 等）、代码生成/评测、研发流程集成 | [domains/ai-coding/INDEX.md](domains/ai-coding/INDEX.md) | 2 |
+| `ai-coding` | AI Coding 工具 | 编码助手与 Agent（Claude Code、Cursor、Copilot 等）、代码生成/评测、研发流程集成 | [domains/ai-coding/INDEX.md](domains/ai-coding/INDEX.md) | 4 |
 
 ## 跨领域索引
 
@@ -21,6 +21,8 @@ AI 先进技术调研知识库的一级入口。**先在这里定位领域，再
 
 | 日期 | 领域 | 条目 | 变更 |
 |---|---|---|---|
+| 2026-08-12 | ai-coding | ai-coding-solution-0002 | 新增《Agent-Ready 仓库与工作流落地方案：从可验证边界到分层上下文》 |
+| 2026-08-12 | ai-coding | ai-coding-insight-0002 | 新增《AI Coding 编程范式：方法论与仓库形态的双重重构》 |
 | 2026-08-12 | ai-coding | ai-coding-solution-0001 | 新增《OpenCode 记忆能力设计方案：零上游补丁的插件式实现》 |
 | 2026-08-12 | ai-coding | ai-coding-insight-0001 | 新增《AI Coding Agent 的记忆机制：五家实现原理拆解与 OpenCode 差距》 |
 | 2026-08-07 | agent-platform | agent-platform-solution-0001 | 新增《数字员工平台设计方案》 |

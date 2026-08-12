@@ -8,7 +8,7 @@ created: 2026-08-12
 updated: 2026-08-12
 tags: [memory, context-engineering, cli-agent, coding-agent, tech-route, architecture]
 vendors: [claude-code, codex, trae, github-copilot, gemini-cli, opencode]
-related: [ai-coding-solution-0001]
+related: [ai-coding-solution-0001, ai-coding-insight-0002]
 summary: 记忆已从静态指令文件演进为「离线抽取＋索引常驻＋按需检索」的四层结构，OpenCode 只做到第一层
 ---
 
