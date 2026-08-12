@@ -4,13 +4,23 @@
 **不含**：通用 Agent 平台机制（见 [agent-platform](../agent-platform/INDEX.md)）。
 详见 [docs/taxonomy.md](../../docs/taxonomy.md#ai-coding--ai-coding-工具)。
 
-最后更新：2026-08-11 ｜ 条目数：3
+最后更新：2026-08-12 ｜ 条目数：4
+
+## 专题
+
+领域内围绕同一问题成组的条目。**先在这里定位专题，再进入具体条目**；未归入专题的条目只出现在下方按类型的表格中。
+
+| 专题 | 问题 | 包含条目 | 状态 |
+|---|---|---|---|
+| **整体格局与企业落地** | CLI 形态编码 Agent 怎么选、怎么在公司内合规铺开 | [insight-0001](insights/2026-08-11-cli-coding-agent-landscape.md) · [solution-0001](solutions/2026-08-11-opencode-enterprise-customization-roadmap.md) · [vendor-0001](vendors/opencode.md) | 进行中 |
+| **记忆与上下文管理** | opencode 在记忆/上下文上缺什么、按什么顺序补 | [insight-0002](insights/2026-08-12-memory-context-management-landscape.md) | 进行中（待补 solution） |
 
 ## 业界洞察 · insights/
 
 | ID | 标题 | 摘要 | 标签 | 状态 | 更新 |
 |---|---|---|---|---|---|
 | [ai-coding-insight-0001](insights/2026-08-11-cli-coding-agent-landscape.md) | CLI 形态 AI Coding 工具的技术路线与企业化差距 | CLI Agent 分三条路线；中立内核在能力上必然滞后，企业价值在治理、私有上下文与流程闭环 | cli-agent, market-landscape, tech-route, guardrail, observability | review | 2026-08-11 |
+| [ai-coding-insight-0002](insights/2026-08-12-memory-context-management-landscape.md) | AI Coding 工具的记忆与上下文管理：机制拆解与 opencode 差距分析 | opencode 有压缩无记忆；六层能力里它缺第四层，且第一、三、六层只做到及格线 | context-engineering, memory, agent-skills, repo-understanding | review | 2026-08-12 |
 
 ## 方案设计 · solutions/
 
