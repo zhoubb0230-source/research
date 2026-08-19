@@ -40,6 +40,13 @@ domains/
     solutions/
     vendors/
     assets/
+  business-insight/           # 业务洞察（新业务机会洞察方法与洞察专家团）
+    INDEX.md
+    insights/                 # 机会榜单与单机会深度洞察报告
+    solutions/
+    vendors/
+    assets/
+      expert-team/            # 专家团可运行资产：rubric / schemas / prompts / orchestration / checks
 ```
 
 新增领域时：在 `domains/` 下按同样结构建目录，登记到 `docs/taxonomy.md` 与 `INDEX.md`。

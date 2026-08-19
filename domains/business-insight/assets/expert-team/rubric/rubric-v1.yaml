@@ -1,0 +1,263 @@
+# 产业机会经纬线 · 机器可读口径
+# 说明文档：../../../solutions/2026-08-19-opportunity-screening-rubric.md
+# 本文件是专家团执行时的唯一口径真相源。一轮筛选中途禁止修改；修改必须递增 version 并整轮重跑。
+
+version: rubric-v1
+status: draft            # draft -> 经 §6 校准 -> frozen
+frozen_at: null          # 冻结日期，未冻结前不得用于正式筛选
+calibrated_by: []        # 校准专家名单，见说明文档 §6
+
+meta:
+  scale: [0, 10]         # 维度分值区间
+  na_policy: exclude_from_denominator   # NA 不计 0 分，从分母中扣除后归一化
+  score_range: [-30, 130]
+
+# ---------------------------------------------------------------
+# 闸门：任一不过即出局。判定顺序即执行顺序（成本由低到高）。
+# ---------------------------------------------------------------
+gates:
+  - id: G-4
+    name: 法律与合规红线
+    rule: 军品、受限终端用途、明令禁止或淘汰类产业
+    action: reject
+    cost: low
+    evidence_required: true
+
+  - id: G-5
+    name: 红海排除
+    rule: 全球有效供应商 > 20 家 AND 头部毛利 < 30%
+    action: reject
+    cost: low
+    evidence_required: true
+
+  - id: G-2
+    name: 技术成熟度
+    rule: TRL < 5（概念/实验室原型阶段）
+    action: reject
+    cost: medium
+    evidence_required: true
+
+  - id: G-1
+    name: 能力可迁移性
+    rule: 维度 A 得分 < 4
+    action: reject
+    cost: medium
+    evidence_required: true
+
+  - id: G-3
+    name: 我方可造性
+    rule: 核心部件或材料受进口管制 AND 无国内替代 AND 无自研路径
+    action: reject
+    cost: medium
+    evidence_required: true
+    note: 管制判定必须回原文，undetermined 不得视为 not_restricted
+
+  - id: G-6
+    name: 数据可得性
+    rule: 维度 A/C/D 的核心指标全部为 NA
+    action: defer            # 关键：不是 reject
+    target_pool: pending_evidence
+    cost: low
+    note: |
+      数据缺失是我们的信息问题，不是机会的质量问题。
+      当作淘汰条件会让系统系统性偏向统计口径完善的成熟行业，而那里机会最少。
+
+# ---------------------------------------------------------------
+# 评分维度
+# ---------------------------------------------------------------
+dimensions:
+  - id: A
+    name: 技术链重合度
+    maps_to: 经纬线 a
+    weight: 25
+    owner_role: S4
+    method: 子能力项逐项判定，禁止整体印象分
+    sub_capabilities:
+      - 超高真空与气体/流体控制
+      - 精密运动与定位（气浮/磁浮、直线电机、纳米级伺服与隔振）
+      - 光机电一体化与精密光学
+      - 超净与污染控制（颗粒、材料相容性、出气管理）
+      - 射频/高压电源与等离子体
+      - 在线量测与传感
+      - 过程控制软件（配方管理、APC/FDC）
+      - 高可靠性与量产工程（MTBF、24/7、备件服务）
+      - 精密供应链（精密加工、陶瓷/石英、特种密封）
+      - 客户工艺协同能力
+    anchors:
+      10: ≥6 项直接复用，且核心技术难点落在我方现有强项上
+      8:  4–5 项直接复用
+      6:  3 项直接复用，或 5 项需中度改造
+      4:  2 项直接复用，或多项需重度改造
+      2:  仅 1 项且属通用能力
+      0:  无实质重合
+
+  - id: B
+    name: 客户结构与直销适配
+    maps_to: 经纬线 b
+    weight: 18
+    owner_role: S3
+    key_definition: 评的是「设备采购方」的集中度，不是终端行业的集中度
+    anchors:
+      10: 全球目标客户 < 30 家；Top10 占行业设备采购 > 60%；可直接触达技术决策人
+      8:  客户 < 100 家；Top10 > 40%；直销可覆盖
+      6:  客户 100–300 家；需少量区域服务点
+      4:  客户 300–1000 家；需渠道分销
+      2:  客户 > 1000 家；必须建经销体系
+      0:  面向消费端或长尾市场
+
+  - id: C
+    name: 市场规模、增长与盈利结构
+    maps_to: 经纬线 c
+    weight: 20
+    owner_role: S3
+    key_definition: |
+      毛利 50% 指「在位头部玩家的毛利率」，不是我方目标毛利。
+      它的信息量是「该行业结构允许高毛利」，不是「我们第一代产品就能做到」。
+    anchors:
+      10: 设备市场 ≥200 亿 AND CAGR ≥20% AND 在位头部毛利 ≥55%
+      8:  设备市场 ≥100 亿 AND CAGR ≥15% AND 在位头部毛利 ≥50%
+      6:  上述三项达标两项
+      4:  达标一项
+      2:  均未达标但三项指标趋势向上
+      0:  市场萎缩，或行业毛利结构性偏低（头部 <30%）
+    na_hotspot: true
+    na_note: 设备级细分市场规模在官方统计中通常查不到，取证时优先攻这一项
+
+  - id: D
+    name: 竞争格局
+    maps_to: 经纬线 d
+    weight: 15
+    owner_role: S3
+    joint_with: i      # 必须与管制不对称性联合判定
+    anchors:
+      10: 供应商 3–8 家；CR2 <60%；且主要在位者受对华出口管制
+      8:  供应商 3–10 家；CR3 <70%
+      6:  供应商 ≤10 家；CR3 70–85%
+      4:  双强格局（CR2 >70%），属规模型双强（无技术代差）
+      2:  双强格局，属技术垄断型（存在代差 + 专利/生态壁垒）
+      0:  单一垄断且专利与生态双重封锁
+    note: |
+      「两强」不是恒定负分。两强不受管制 = 最差；两强均受对华管制 = 最好。
+      双强不直接降级，走 D=4 或 D=2，由修正项 i 加回。
+
+  - id: E
+    name: 政策与战略契合
+    maps_to: 经纬线 e
+    weight: 12
+    owner_role: S3
+    anchors:
+      10: 同时命中新兴产业目录与单体设备攻关/首台套类目录，且无被指定独家承担的国家队
+      8:  命中其一，且有明确专项支持
+      6:  属鼓励类但无对应专项
+      4:  无明确政策定位（中性）
+      2:  属限制类
+      0:  属淘汰类或禁止类
+    modifiers:
+      - condition: 已有政策指定的独家承担主体
+        delta: -3
+        note: 「在攻关目录里」是双刃剑——既是资源与订单确定性，也可能意味着竞争者是被指定的
+    evidence_rule: 政策判定必须回原文，给出文件名 + 发布机构 + 条目定位 + 检索日期
+
+  - id: F
+    name: 技术窗口与国产化缺口
+    maps_to: 经纬线 f（已重述）
+    weight: 10
+    owner_role: S4
+    restatement: |
+      原表述「中国三年内大概率无法突破」自相矛盾：若真无法突破，作为中国公司我方同样突破不了。
+      真实意图是「壁垒足够高」——高到我方突破后同行不会在一年内跟平。
+      重述为：突破周期 2–5 年（<2 年壁垒不足，>5 年超出商业窗口）。
+    sub_criteria:
+      trl:            {target: "6–8", reject_below: 5, note: "=9 且已白菜化则无溢价"}
+      localization:   {target: "<30%", ideal: "<10%", closed_above: "70%"}
+      breakthrough_years: {target: "2–5", too_easy_below: 2, too_far_above: 5}
+    anchors:
+      10: TRL 6–8 AND 国产化率 <10% AND 突破周期 3–5 年
+      8:  TRL 6–8 AND 国产化率 <30% AND 突破周期 2–5 年
+      6:  满足三子项中的两项
+      4:  满足其一
+      2:  国产化率 >70%（窗口已关闭）或突破周期 <2 年（壁垒不足）
+      0:  TRL <5（已由 G-2 拦截，冗余保护）
+
+# ---------------------------------------------------------------
+# 修正项：回答「我们能不能进得去、代价多大」
+# ---------------------------------------------------------------
+adjustments:
+  - id: g
+    name: 进入路径可得性
+    range: [-10, 10]
+    owner_role: S3
+    rationale: 没有进入路径的机会不是机会，是新闻。原 a–f 全是标的属性，无一条是我方可及性。
+    anchors:
+      10:  存在可并购/可投资标的 AND 有明确灯塔客户联合开发意向
+      5:   具备其中之一
+      0:   无现成路径但可自建团队进入
+      -5:  关键人才或核心供应链不可得
+      -10: 存在专利封锁，或必要资质/认证在可预见期内无法获得
+
+  - id: h
+    name: 验证成本与周期
+    range: [-10, 10]
+    owner_role: S4
+    rationale: 装备类新业务的隐性成本主要在验证阶段，且它决定了可承受的试错次数。
+    anchors:
+      5:   首台套验证 <12 个月，NRE 在常规项目量级
+      0:   验证周期 12–24 个月
+      -5:  验证周期 24–36 个月
+      -10: 验证周期 >36 个月，或需客户产线长期停机配合
+
+  - id: i
+    name: 管制不对称性
+    range: [-10, 10]
+    owner_role: C3
+    method: 双向分别取值后求和，结果钳制在 ±10
+    inbound:      # 机会侧：在位者受限 = 我方机会
+      10: 在位供应商全面受对华出口管制，且国内无替代供给
+      5:  部分受限，或存在许可证不确定性
+      0:  无管制影响
+    outbound:     # 我方侧：我方受限 = 天花板与风险
+      -5:  我方产品部分落入管制清单，影响出口或技术合作
+      -10: 核心部件受进口管制且无替代（同时触发 G-3）
+    output_states: [restricted, not_restricted, undetermined]
+    hard_rule: undetermined 不得被下游当作 not_restricted 使用；触发置信度降为 low
+    evidence_rule: 必须给出 清单名称 + 版本/生效日期 + 类别号或条目号 + 检索日期
+    disclaimer: 仅为内部研判输入，不构成合规意见，最终以法务/合规部门结论为准
+
+# ---------------------------------------------------------------
+# 计分与排序
+# ---------------------------------------------------------------
+scoring:
+  base: "Σ (weight × dimension_score / 10)，NA 维度的 weight 从分母扣除后归一化"
+  final: "base + g + h + i"
+
+confidence:
+  inputs: [evidence_coverage, avg_evidence_grade, conflicting_count, red_team_overturns]
+  grade_values: {A: 3, B: 2, C: 1, D: 0}
+  levels:
+    high:   覆盖率 ≥80% AND 平均等级 ≥2.0 AND 无 conflicting AND 红队未推翻核心结论
+    medium: 覆盖率 60–80%，或存在已仲裁的 conflicting
+    low:    覆盖率 <60%，或存在 undetermined 的管制判定，或红队推翻了 ≥1 项核心结论
+
+ranking:
+  method: two_tier          # 先按置信度分层，层内按终分降序
+  hard_rule: |
+    low 置信度的机会无论终分多高都不得直接进入 Top K 深度洞察。
+    先定向补证，补到 medium 以上再重排。
+    理由：高分 + 低置信度最可能的解释是「缺失数据被乐观填充」，而不是「它真的很好」。
+  top_k_default: 6          # 建议 5–8，见 solution-0001 §3.2
+
+# ---------------------------------------------------------------
+# 榜单必备列（缺一不可）
+# ---------------------------------------------------------------
+longlist_required_columns:
+  - rank
+  - opportunity_name
+  - final_score
+  - confidence
+  - dimension_scores        # A–F 逐维列出
+  - adjustments             # g/h/i 分别列出
+  - selection_rationale     # 3–5 句，每句必须带 evidence_ref
+  - most_likely_wrong       # 红队给出的头号致命假设，不可省略
+  - evidence_coverage
+  - export_control_status   # 向内/向外双向三态
+  - rubric_version

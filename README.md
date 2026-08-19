@@ -12,3 +12,4 @@ AI 先进技术调研知识库：沉淀**业界洞察**与**方案设计**。
 |---|---|
 | [智能体平台](domains/agent-platform/INDEX.md) | Agent 编排/运行时、多智能体、工具与 MCP、平台产品与落地方案 |
 | [AI Coding 工具](domains/ai-coding/INDEX.md) | 编码助手与编码 Agent、代码库理解、研发流程集成与效能度量 |
+| [业务洞察](domains/business-insight/INDEX.md) | 新业务机会的筛选框架与评分口径、洞察类多智能体系统设计与可运行资产 |

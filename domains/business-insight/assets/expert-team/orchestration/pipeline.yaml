@@ -1,0 +1,159 @@
+# 业务洞察专家团 · 平台中立编排定义
+# 说明：用「阶段 + 契约 + 准入条件」描述，不绑定任何厂商 DSL。
+# 平台落地映射见 README-platform-mapping.md
+
+pipeline: business-insight-expert-team
+version: v1
+rubric_version: rubric-v1        # 一轮筛选中途不得变更
+
+# ---------------------------------------------------------------
+# 全局不变量：任何平台实现都必须满足，否则不得上线
+# ---------------------------------------------------------------
+invariants:
+  - id: INV-1
+    rule: 阶段间存在硬门，准入条件不满足不得放行，且无人工旁路
+  - id: INV-2
+    rule: 证据库跨阶段持久化且 evidence_id 全局唯一，任何角色不得绕过证据库产出数字
+  - id: INV-3
+    rule: 渲染前必须执行确定性数字校验钩子（checks/verify_report.py），退出码非 0 即阻断
+    note: 做不到这一条的平台不能选——第三道闸是唯一不可被模型绕过的防线
+  - id: INV-4
+    rule: 出局池与待补证池全量留档，不得清理
+  - id: INV-5
+    rule: 对抗阶段硬上限 2 轮，由编排层强制计数，不依赖模型自觉
+
+# ---------------------------------------------------------------
+# 阶段定义
+# ---------------------------------------------------------------
+stages:
+  - id: P0
+    name: 口径固化
+    roles: [G2]
+    human_in_loop: true            # 人工签署，不可省略
+    input:  {经纬线原文, 业务约束}
+    output: {rubric: "rubric-vN.yaml"}
+    entry_condition: null
+    exit_condition: "rubric.status == frozen AND rubric.frozen_at != null AND 人工签署"
+    on_fail: halt
+    note: P0 不能跳。口径没校准就跑全量，产出的是一堆无法复现的分数。
+
+  - id: P1
+    name: 机会枚举
+    roles: [S1]
+    parallelism: by_catalog
+    input:  {rubric, catalog_sources}
+    output: {candidates: "opportunity.schema.json[]"}
+    entry_condition: "P0.exit"
+    exit_condition: "所有登记目录扫完且留痕 AND 每个候选都有 enumerated_from"
+    budget: {stage_cap: true}
+    on_fail: halt
+
+  - id: P2
+    name: 闸门筛
+    roles: [C3, G1]
+    gate_order: [G-4, G-5, G-2, G-1, G-3, G-6]     # 按判定成本由低到高，顺序错了成本差一个量级
+    input:  {candidates, rubric.gates}
+    output: {active_pool, rejected_pool, pending_evidence_pool}
+    entry_condition: "P1.exit"
+    exit_condition: "每个候选都有 gate_result 且 pool 已赋值"
+    on_fail: halt
+    note: G-6（数据可得性）的 action 是 defer 不是 reject
+
+  - id: P3
+    name: 证据采集
+    roles: [S2, C2]
+    parallelism: by_opportunity_x_metric
+    loop: {with: C2, mode: collect_then_verify, retry_on: [unverified, not_found], max_retry: 2}
+    input:  {active_pool, rubric.metrics}
+    output: {evidence_db: "evidence.jsonl"}
+    entry_condition: "P2.exit"
+    exit_condition: "核心指标 verified 率 ≥ threshold OR 阶段预算耗尽"
+    on_fail: degrade      # 取不满不阻断，未取到的指标记 NA 进入下一阶段
+    note: 本阶段占单轮成本的大头。用 Sonnet + 批处理 + 提示词缓存。
+
+  - id: P4
+    name: 评分
+    roles: [S3, S4]
+    parallelism: by_opportunity
+    input:  {active_pool, evidence_db, rubric}
+    output: {scorecards: "scorecard.schema.json[]"}
+    entry_condition: "P3.exit"
+    exit_condition: "全部 scorecard 通过 schema 校验"
+    on_fail: retry_once_then_halt
+    validation: {schema: "../schemas/scorecard.schema.json", strict: true}
+
+  - id: P5
+    name: 证伪对抗
+    roles: [C1]
+    parallelism: by_opportunity
+    max_rounds: 2                  # 硬上限，由编排层计数
+    round_rules:
+      1: 红队全面质疑，分析师应答
+      2: 红队只能针对第 1 轮应答中的新证据；重复第 1 轮论点的质疑直接丢弃
+    input:  {scorecards, evidence_db}     # 不含分析师推理过程
+    output: {challenges: "verdict.schema.json.challenges", falsification_memo}
+    entry_condition: "P4.exit"
+    exit_condition: "round == 2 OR 无新增质疑"
+    model_constraint: 必须与 P4 使用不同模型、不同会话
+
+  - id: P6
+    name: 仲裁
+    roles: [A1]
+    input:  {scorecards, challenges}
+    output: {verdicts, longlist}
+    entry_condition: "P5.exit"
+    exit_condition: "每个 challenge_id 都有对应 verdict"
+    rules:
+      basis_priority: [evidence_grade, evidence_count, logical_consistency, conservative_default]
+      forbidden: [voting, taking_midpoint, self_sourcing_evidence]
+      unresolved_default_action: confidence_downgraded
+
+  - id: P7
+    name: 深度洞察
+    roles: [C1, S2, S3, S4, A1]
+    parallelism: by_opportunity
+    scope: "longlist 中置信度 ≥ medium 的 Top K"
+    top_k: 6
+    sub_pipeline: [证伪备忘录, 定向取证, 深度分析, 红队复攻, 仲裁]
+    entry_condition: "P6.exit"
+    exit_condition: "每机会的 falsification_memo 三条假设均有 result"
+    hard_rule: low 置信度的机会无论终分多高都不得进入本阶段，先回 P3 定向补证
+    budget: {per_opportunity_cap: true}
+
+  - id: P8
+    name: 渲染
+    roles: [A2, A3]
+    input:  {深度分析 JSON, templates}
+    output: {reports: "markdown"}
+    entry_condition: "P7.exit"
+    exit_condition: "verify_report.py 退出码 == 0"
+    hook:
+      type: deterministic_script
+      command: "python3 ../checks/verify_report.py <report.md> <evidence.jsonl>"
+      on_nonzero: block          # 无旁路，不可降级放行
+    on_fail: return_to_P3        # 缺证据回去补，不允许改报告绕过校验
+
+  - id: P9
+    name: 归档
+    roles: [G1]
+    human_in_loop: true
+    output:
+      reports_to: "domains/business-insight/insights/"
+      evidence_to: "domains/business-insight/assets/evidence/<batch>/"
+      scorecards_to: "domains/business-insight/assets/scorecards/<batch>/"
+    exit_condition: "两级索引已更新（领域 INDEX.md + 全局 INDEX.md）"
+    note: 归档前确认密级与分发范围
+
+# ---------------------------------------------------------------
+# 预算与失败处置
+# ---------------------------------------------------------------
+budget:
+  policy: per_stage_cap
+  on_exceed: halt_and_report      # 不得自动追加
+  dominant_stage: P3
+
+failure_policy:
+  schema_validation_failed: 丢弃输出并重跑该角色，最多 1 次，仍失败则 halt
+  evidence_not_found: 记 NA，不阻断，降低置信度
+  export_control_undetermined: 置信度降为 low，不得视为 not_restricted
+  render_check_failed: 阻断，回 P3 补证，禁止修改报告绕过

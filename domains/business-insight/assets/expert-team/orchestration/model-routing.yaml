@@ -1,0 +1,142 @@
+# 角色 → 模型 → 参数 路由表
+# 价目口径日期 2026-06-24，Claude API 首方费率（输入/输出，USD per MTok）。
+# 第三方云平台费率不同。运行前重新核对当期费率与能力可用性。
+
+defaults:
+  thinking: {type: adaptive}
+  prompt_caching: true
+  cache_prefix: [shared_guardrails, rubric, anchors, domain_knowledge_pack]   # 稳定内容置于缓存断点之前
+  cache_suffix: [candidate_payload, evidence_slice]                            # 易变内容置于断点之后
+
+roles:
+  G1_orchestrator:
+    model: none
+    impl: 编排引擎 / 代码
+    rationale: 状态机用代码写比用模型稳定、可审计且免费
+
+  G2_rubric_owner:
+    model: claude-opus-5
+    effort: high
+    rationale: 一轮只跑一次，成本可忽略，口径质量决定整轮上限
+
+  S1_opportunity_scanner:
+    model: claude-opus-5
+    effort: medium
+    context_need: 1M            # 需读完整目录文本
+    batch_api: true             # 非实时，走批处理省一半
+    rationale: 需要产业常识广度与长上下文；判断负担轻，medium 足够
+
+  S2_evidence_collector:
+    model: claude-sonnet-5
+    effort: medium
+    instances: N                # 本系统唯一需要高并发的角色
+    server_tools: [web_search_20260209, web_fetch_20260209]
+    structured_output: evidence.schema.json
+    batch_api: true             # 首轮粗采
+    rationale: |
+      量最大、成本敏感。1M 上下文可整篇吃年报/研报。
+      不用 haiku-4-5：200K 上下文在整本年报上会被迫截断，抽取失真。
+
+  S3_industry_analyst:
+    model: claude-opus-5
+    effort: xhigh
+    structured_output: scorecard.schema.json
+    rationale: 评分一致性直接决定排序可信度，此处不省钱
+
+  S4_techchain_analyst:
+    model: claude-opus-5
+    effort: xhigh
+    knowledge_pack: semiconductor-equipment-v1
+    structured_output: scorecard.schema.json
+    rationale: A 是最高权重维度（25），判定质量决定榜单可用性
+
+  C1_red_team:
+    model: claude-fable-5
+    effort: max
+    structured_output: verdict.schema.json
+    hard_constraint:
+      - 必须与 S3/S4 异源（不同模型 + 不同会话）
+      - 输入不含分析师推理过程，只含结论与证据
+    fallback_when_budget_limited:
+      model: claude-opus-5
+      effort: max
+      note: 同源但换提示词范式 + 换会话，效果次之
+    rationale: 同模型自我批判存在同源盲区，异源可带来不同的失效模式
+
+  C2_fact_checker:
+    model: claude-sonnet-5
+    effort: medium
+    server_tools: [web_fetch_20260209]
+    rationale: 高频、低难度、纯机械核对，不需要 opus 档
+
+  C3_compliance_officer:
+    model: claude-opus-5
+    effort: high
+    server_tools: [web_search_20260209, web_fetch_20260209]
+    hard_constraint: 禁止凭记忆判定，必须现场检索原文并给出条目定位
+    rationale: 低频、高风险、错判代价大
+
+  A1_arbiter:
+    model: claude-opus-5
+    effort: xhigh
+    structured_output: verdict.schema.json
+    rationale: 裁决质量决定分歧处置是否合理
+
+  A2_chief_insight_officer:
+    model: claude-fable-5
+    effort: max
+    rationale: 低频；「这个结论有没有用」是全流程最难的判断
+
+  A3_report_renderer:
+    model: claude-haiku-4-5
+    effort: n/a
+    post_hook: checks/verify_report.py
+    hard_constraint: 禁止引入新数字、新实体、新因果断言
+    rationale: 只做措辞改写不做判断；数字由脚本把关，用最低成本档
+
+# ---------------------------------------------------------------
+# 必须开启的 API 能力
+# ---------------------------------------------------------------
+required_capabilities:
+  structured_outputs:
+    param: "output_config.format"
+    roles: [S2, S3, S4, C1, C2, C3]
+    purpose: 防编造第一道闸——schema 强制数值字段与 evidence_ref 同时存在
+
+  strict_tools:
+    param: "strict: true"
+    roles: all
+    purpose: 保证 tool_use.input 严格符合 schema
+
+  web_tools:
+    types: [web_search_20260209, web_fetch_20260209]
+    roles: [S2, C2, C3]
+    purpose: 取证与回源核对；C3 的原文检索强依赖
+
+  adaptive_thinking:
+    param: 'thinking: {type: "adaptive"}'
+    roles: [S3, S4, C1, A1, A2]
+
+  prompt_caching:
+    roles: all
+    purpose: 口径表、锚点表、领域知识包是稳定前缀
+    verify: usage.cache_read_input_tokens 应 > 0；恒为 0 说明前缀被静默失效
+
+  batch_api:
+    roles: [S1, S2]
+    purpose: 非实时环节费率减半
+
+# ---------------------------------------------------------------
+# 成本
+# ---------------------------------------------------------------
+cost_model:
+  formula: "单轮 ≈ Σ_角色 [(输入token × 单价in) + (输出token × 单价out)]"
+  dominant_term: "S2 ≈ 候选数 N × 每候选指标数 M × 每指标平均取回文本量 T × 单价in"
+  levers_by_roi:
+    1: 闸门尽量前置——用零成本规则闸先砍掉大头，再进入昂贵的 P3 取证
+    2: S2 用 Sonnet + 批处理 + 缓存
+    3: 深度阶段严格限 Top K——K 从 5 涨到 15，成本涨 3 倍而决策价值几乎不变
+  open_params:      # 需业务侧确定，跑第一轮之前无法预估总额
+    N_candidates: "建议首轮 150–300"
+    K_deep_dive: "建议 5–8"
+    per_opportunity_evidence_budget: 待定

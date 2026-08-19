@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research.local/business-insight/verdict.schema.json",
+  "title": "质疑与裁决 Challenge & Verdict",
+  "description": "红队(C1)的质疑记录与仲裁官(A1)的裁决记录。仲裁按证据等级裁决，不投票、不取中值。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["opportunity_id", "batch", "round", "challenges"],
+  "properties": {
+    "opportunity_id": { "type": "string", "pattern": "^OPP-[0-9]{4}-[0-9]{4}$" },
+    "batch": { "type": "string" },
+    "round": {
+      "type": "integer", "minimum": 1, "maximum": 2,
+      "description": "对抗最多 2 轮。第 2 轮只能针对第 1 轮应答中的新证据，不得重复原论点。"
+    },
+
+    "falsification_memo": {
+      "type": "array",
+      "description": "证伪备忘录：进入深度阶段前必须先写。三条最可能致命的假设，以及推翻各自需要什么证据。",
+      "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["assumption", "why_fatal", "falsifying_evidence_needed"],
+        "properties": {
+          "assumption": { "type": "string", "description": "这个结论依赖的隐含假设" },
+          "why_fatal": { "type": "string", "description": "假设不成立会导致什么后果" },
+          "falsifying_evidence_needed": { "type": "string", "description": "什么样的证据能推翻它" },
+          "checked": { "type": "boolean", "default": false },
+          "result": { "enum": ["holds", "weakened", "falsified", "undetermined", null] }
+        }
+      }
+    },
+
+    "challenges": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["challenge_id", "target", "type", "claim", "severity"],
+        "properties": {
+          "challenge_id": { "type": "string" },
+          "target": {
+            "type": "object", "additionalProperties": false,
+            "required": ["kind", "ref"],
+            "properties": {
+              "kind": { "enum": ["dimension_score", "adjustment", "measure", "rationale", "gate_result", "overall"] },
+              "ref": { "type": "string", "description": "如 dimensions.C 或 adjustments.i.inbound" }
+            }
+          },
+          "type": {
+            "enum": ["evidence_weak", "evidence_missing", "source_grade_too_low", "scope_mismatch",
+                     "anchor_misapplied", "counterexample", "confirmation_bias", "stale_data",
+                     "causal_overreach", "definition_drift"],
+            "description": "质疑类型。counterexample 必须给出具体反例及其 evidence_ref。"
+          },
+          "claim": { "type": "string" },
+          "counter_evidence_refs": { "type": "array", "items": { "type": "string", "pattern": "^EV-[0-9]{4}-[0-9]{4}$" } },
+          "severity": { "enum": ["fatal", "major", "minor"], "description": "fatal 表示若成立则该机会应出榜" },
+          "response": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "properties": {
+              "by": { "type": "string" },
+              "statement": { "type": "string" },
+              "new_evidence_refs": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+
+    "verdicts": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["challenge_id", "decision", "basis", "effect"],
+        "properties": {
+          "challenge_id": { "type": "string" },
+          "decision": { "enum": ["challenge_upheld", "challenge_rejected", "unresolved"] },
+          "basis": {
+            "enum": ["evidence_grade", "evidence_count", "logical_consistency", "conservative_default"],
+            "description": "裁决依据，优先级：证据等级 > 证据数量 > 逻辑一致性 > 保守优先。禁止投票、禁止取中值。"
+          },
+          "basis_detail": { "type": "string" },
+          "effect": {
+            "type": "object", "additionalProperties": false,
+            "required": ["action"],
+            "properties": {
+              "action": {
+                "enum": ["score_revised", "moved_to_pending_evidence", "removed_from_longlist",
+                         "confidence_downgraded", "no_change"],
+                "description": "unresolved 的默认动作是 confidence_downgraded，不是取中值"
+              },
+              "from": { "type": ["number", "string", "null"] },
+              "to": { "type": ["number", "string", "null"] }
+            }
+          }
+        }
+      }
+    },
+
+    "most_likely_wrong": {
+      "type": ["string", "null"],
+      "description": "红队认定的头号致命假设。榜单必备列，不可省略。只列理由不列风险的榜单会被当成推荐清单。"
+    },
+    "arbitrated_by": { "type": ["string", "null"] },
+    "arbitrated_at": { "type": ["string", "null"] }
+  }
+}

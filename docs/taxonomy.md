@@ -22,6 +22,14 @@
 
 **子主题（建议作为一级 tag）**：`ide-assistant` `coding-agent` `cli-agent` `code-review` `test-gen` `repo-understanding` `benchmark` `devex-metrics` `enterprise-rollout`
 
+### `business-insight` — 业务洞察
+
+**收录**：面向新业务/新机会的产业洞察方法论（机会枚举、筛选闸门、评分口径与锚点）、洞察类多智能体系统的角色与编排设计、防编造与证据管理机制，以及该系统产出的机会榜单与单机会深度洞察报告。
+
+**不收录**：Agent 平台自身的机制与产品形态（归 `agent-platform`，用 `related` 互链）；不含任何未经来源核实的产业数据——本领域的产业数据只能由专家团在运行时带来源产出并经校验后入库。
+
+**子主题（建议作为一级 tag）**：`opportunity-scouting` `rubric` `export-control` `anti-hallucination` `multi-agent` `guardrail` `selection` `market-landscape`
+
 ### 待扩展领域（尚未建目录，需要时再建）
 
 `model`（基础模型能力与选型）、`infra`（推理/训练基础设施）、`rag-search`（企业检索）、`ai-product`（AI 产品形态与商业化）。
@@ -44,6 +52,9 @@
 ### 编码场景
 `ide-assistant` `coding-agent` `cli-agent` `code-review` `test-gen` `repo-understanding` `benchmark` `devex-metrics`
 
+### 业务洞察
+`opportunity-scouting` （新业务机会搜寻）· `rubric` （评分口径与锚点）· `export-control` （出口管制与合规筛）· `anti-hallucination` （防编造机制）
+
 ### 视角
 `market-landscape` （竞品格局）· `tech-route` （技术路线）· `architecture` （架构设计）· `selection` （选型）· `landing` （落地实施）· `enterprise-landing` （企业级落地）· `pricing` （商业与定价）· `security` （安全合规）
 
@@ -63,6 +74,9 @@
 - 流程引擎：`camunda` `flowable` `activiti` `temporal`
 - 企业 AI 应用与检索：`agentforce`（Salesforce）`glean` `m365-copilot`
 - 数据与可观测：`milvus` `pgvector` `langfuse` `cozeloop` `promptfoo`
+
+### 模型（用于角色—模型路由等场景）
+`claude-fable-5` `claude-opus-5` `claude-sonnet-5` `claude-haiku-4-5`
 
 ### AI Coding
 `claude-code` `cursor` `github-copilot` `windsurf` `cline` `aider` `devin` `codex` `lingma`（通义灵码）`comate`（百度）`trae`

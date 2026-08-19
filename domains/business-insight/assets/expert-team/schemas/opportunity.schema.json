@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research.local/business-insight/opportunity.schema.json",
+  "title": "候选机会 Opportunity",
+  "description": "机会枚举官(S1)产出的候选记录，经闸门(C3+G)判定后带上 gate_result。枚举阶段禁止价值判断。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["opportunity_id", "batch", "name", "definition", "enumerated_from", "gate_result"],
+  "properties": {
+    "opportunity_id": { "type": "string", "pattern": "^OPP-[0-9]{4}-[0-9]{4}$" },
+    "batch": { "type": "string" },
+    "name": { "type": "string", "description": "机会名称，应落到设备/产品层，不是行业层" },
+    "definition": {
+      "type": "string",
+      "description": "这个机会具体指什么设备/产品，卖给谁，解决什么工艺问题。写不清楚说明枚举颗粒度不对。"
+    },
+    "layer": {
+      "enum": ["equipment", "subsystem", "component", "material", "software", "service"],
+      "description": "机会所处的价值链层级"
+    },
+    "end_industry": { "type": ["string", "null"], "description": "终端应用行业" },
+
+    "enumerated_from": {
+      "type": "array",
+      "minItems": 1,
+      "description": "从哪个目录/文本枚举出来的，必须可回溯。禁止无来源的自由联想。",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["catalog", "locator"],
+        "properties": {
+          "catalog": {
+            "enum": ["national_industry_classification", "strategic_emerging_catalog",
+                     "five_year_plan_text", "key_equipment_program", "first_set_catalog",
+                     "association_equipment_directory", "customs_tariff_chapter",
+                     "patent_landscape", "competitor_product_line", "other"]
+          },
+          "catalog_name": { "type": ["string", "null"] },
+          "locator": { "type": "string", "description": "条目号/章节/页码" },
+          "accessed_at": { "type": ["string", "null"] }
+        }
+      }
+    },
+
+    "gate_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "checks"],
+      "properties": {
+        "status": { "enum": ["passed", "rejected", "deferred"] },
+        "rejected_by": { "type": ["string", "null"], "description": "首个未通过的闸门 ID，如 G-3" },
+        "pool": {
+          "enum": ["active", "rejected", "pending_evidence"],
+          "description": "deferred 的机会进 pending_evidence，不参与本轮排名但保留"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["gate_id", "result", "rationale"],
+            "properties": {
+              "gate_id": { "enum": ["G-1", "G-2", "G-3", "G-4", "G-5", "G-6"] },
+              "result": { "enum": ["pass", "fail", "defer", "undetermined"] },
+              "rationale": { "type": "string" },
+              "evidence_refs": {
+                "type": "array",
+                "items": { "type": "string", "pattern": "^EV-[0-9]{4}-[0-9]{4}$" }
+              }
+            }
+          }
+        },
+        "decided_at": { "type": ["string", "null"] }
+      }
+    },
+    "note": { "type": ["string", "null"] }
+  }
+}

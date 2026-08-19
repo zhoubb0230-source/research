@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research.local/business-insight/scorecard.schema.json",
+  "title": "评分卡 Scorecard",
+  "description": "产业分析师(S3)与技术链分析师(S4)的结构化产出。防编造第一道闸：任何数值字段必须同时携带 evidence_refs，否则 schema 校验拒绝。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["opportunity_id", "batch", "rubric_version", "dimensions", "adjustments", "totals", "confidence", "scored_by", "scored_at"],
+
+  "$defs": {
+    "measure": {
+      "description": "带证据约束的度量值。要么给出 value + evidence_refs，要么 status 明确为未获取。禁止填估算值。",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["measured", "not_found", "not_applicable", "conflicting"] },
+        "value": { "type": ["number", "string", "null"] },
+        "unit": { "type": ["string", "null"] },
+        "evidence_refs": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^EV-[0-9]{4}-[0-9]{4}$" }
+        },
+        "note": { "type": ["string", "null"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "measured" } } },
+          "then": {
+            "required": ["value", "evidence_refs"],
+            "properties": {
+              "value": { "not": { "type": "null" } },
+              "evidence_refs": { "minItems": 1 }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["not_found", "not_applicable"] } } },
+          "then": { "properties": { "value": { "type": "null" } } }
+        }
+      ]
+    },
+
+    "dimension_score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "anchor_hit", "rationale", "evidence_refs"],
+      "properties": {
+        "score": {
+          "type": ["integer", "null"],
+          "enum": [0, 2, 4, 6, 8, 10, null],
+          "description": "null 表示 NA（数据不可得）。NA 不当 0 分，从分母中扣除。"
+        },
+        "na_reason": { "type": ["string", "null"], "description": "score 为 null 时必填" },
+        "anchor_hit": {
+          "type": ["string", "null"],
+          "description": "命中 rubric 锚点表的哪一档，逐字引用该档描述。禁止自造档位。"
+        },
+        "rationale": { "type": "string", "minLength": 1, "description": "为什么落在这一档，不是相邻档" },
+        "evidence_refs": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^EV-[0-9]{4}-[0-9]{4}$" }
+        },
+        "measures": {
+          "type": "object",
+          "description": "该维度用到的具体指标值，key 为指标 ID",
+          "additionalProperties": { "$ref": "#/$defs/measure" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "score": { "type": "null" } } },
+          "then": { "required": ["na_reason"] }
+        },
+        {
+          "if": { "properties": { "score": { "type": "integer" } } },
+          "then": {
+            "required": ["anchor_hit"],
+            "properties": { "evidence_refs": { "minItems": 1 } }
+          }
+        }
+      ]
+    }
+  },
+
+  "properties": {
+    "opportunity_id": { "type": "string", "pattern": "^OPP-[0-9]{4}-[0-9]{4}$" },
+    "batch": { "type": "string" },
+    "rubric_version": { "type": "string", "description": "如 rubric-v1。跨批次可比性的唯一依据。" },
+
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["A", "B", "C", "D", "E", "F"],
+      "properties": {
+        "A": { "allOf": [{ "$ref": "#/$defs/dimension_score" }], "title": "技术链重合度 w=25" },
+        "B": { "allOf": [{ "$ref": "#/$defs/dimension_score" }], "title": "客户结构与直销适配 w=18" },
+        "C": { "allOf": [{ "$ref": "#/$defs/dimension_score" }], "title": "市场规模、增长与盈利结构 w=20" },
+        "D": { "allOf": [{ "$ref": "#/$defs/dimension_score" }], "title": "竞争格局 w=15" },
+        "E": { "allOf": [{ "$ref": "#/$defs/dimension_score" }], "title": "政策与战略契合 w=12" },
+        "F": { "allOf": [{ "$ref": "#/$defs/dimension_score" }], "title": "技术窗口与国产化缺口 w=10" }
+      }
+    },
+
+    "sub_capability_hits": {
+      "type": "array",
+      "description": "A 维度必填：逐项判定的子能力项，禁止整体印象分",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["capability", "reuse_level", "rationale"],
+        "properties": {
+          "capability": { "type": "string" },
+          "reuse_level": { "enum": ["direct", "moderate_rework", "heavy_rework", "none"] },
+          "rationale": { "type": "string" }
+        }
+      }
+    },
+
+    "adjustments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["g", "h", "i"],
+      "properties": {
+        "g": {
+          "type": "object", "additionalProperties": false,
+          "required": ["value", "rationale"],
+          "properties": {
+            "value": { "type": "integer", "minimum": -10, "maximum": 10 },
+            "rationale": { "type": "string" },
+            "evidence_refs": { "type": "array", "items": { "type": "string" } }
+          },
+          "title": "进入路径可得性"
+        },
+        "h": {
+          "type": "object", "additionalProperties": false,
+          "required": ["value", "rationale"],
+          "properties": {
+            "value": { "type": "integer", "minimum": -10, "maximum": 10 },
+            "rationale": { "type": "string" },
+            "evidence_refs": { "type": "array", "items": { "type": "string" } }
+          },
+          "title": "验证成本与周期"
+        },
+        "i": {
+          "type": "object", "additionalProperties": false,
+          "required": ["value", "inbound", "outbound", "rationale"],
+          "properties": {
+            "value": { "type": "integer", "minimum": -10, "maximum": 10, "description": "inbound + outbound，钳制在 ±10" },
+            "inbound": {
+              "type": "object", "additionalProperties": false,
+              "required": ["score", "state"],
+              "properties": {
+                "score": { "type": "integer", "minimum": 0, "maximum": 10 },
+                "state": { "enum": ["restricted", "not_restricted", "undetermined"] },
+                "control_list": { "type": ["string", "null"], "description": "清单名称 + 版本/生效日期" },
+                "list_entry": { "type": ["string", "null"], "description": "类别号或条目号" },
+                "checked_at": { "type": ["string", "null"] },
+                "evidence_refs": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "outbound": {
+              "type": "object", "additionalProperties": false,
+              "required": ["score", "state"],
+              "properties": {
+                "score": { "type": "integer", "minimum": -10, "maximum": 0 },
+                "state": { "enum": ["restricted", "not_restricted", "undetermined"] },
+                "control_list": { "type": ["string", "null"] },
+                "list_entry": { "type": ["string", "null"] },
+                "checked_at": { "type": ["string", "null"] },
+                "evidence_refs": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "rationale": { "type": "string" }
+          },
+          "title": "管制不对称性（双向）"
+        }
+      }
+    },
+
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base_score", "final_score", "effective_weight"],
+      "properties": {
+        "base_score": { "type": "number", "description": "Σ(weight × score/10)，NA 维度权重已从分母扣除后归一化" },
+        "final_score": { "type": "number", "description": "base_score + g + h + i" },
+        "effective_weight": { "type": "number", "description": "参与计分的权重之和（100 减去 NA 维度权重）" },
+        "na_dimensions": { "type": "array", "items": { "enum": ["A", "B", "C", "D", "E", "F"] } }
+      }
+    },
+
+    "confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "evidence_coverage", "avg_evidence_grade"],
+      "properties": {
+        "level": { "enum": ["high", "medium", "low"] },
+        "evidence_coverage": { "type": "number", "minimum": 0, "maximum": 1 },
+        "avg_evidence_grade": { "type": "number", "minimum": 0, "maximum": 3 },
+        "conflicting_count": { "type": "integer", "minimum": 0 },
+        "red_team_overturns": { "type": "integer", "minimum": 0 },
+        "downgrade_reasons": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "selection_rationale": {
+      "type": "array",
+      "description": "3–5 条选择该机会的理由，每条必须挂 evidence_refs（对应原始构想：每个机会后附上选择原因）",
+      "minItems": 3, "maxItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["statement", "evidence_refs"],
+        "properties": {
+          "statement": { "type": "string" },
+          "evidence_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^EV-[0-9]{4}-[0-9]{4}$" } }
+        }
+      }
+    },
+
+    "scored_by": { "type": "string" },
+    "scored_at": { "type": "string" }
+  }
+}

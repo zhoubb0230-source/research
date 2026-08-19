@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research.local/business-insight/evidence.schema.json",
+  "title": "证据卡 Evidence Card",
+  "description": "证据库的唯一记录单元。专家团中任何数字都必须来自这里，通过 evidence_id 引用。采集官(S2)产出，核证官(C2)判定 verify_status。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["evidence_id", "batch", "claim", "source", "collector", "collected_at", "verify_status"],
+  "properties": {
+    "evidence_id": {
+      "type": "string",
+      "pattern": "^EV-[0-9]{4}-[0-9]{4}$",
+      "description": "EV-<年>-<四位序号>，全局唯一，不复用"
+    },
+    "batch": { "type": "string", "description": "所属筛选批次，如 2026Q3-01" },
+    "opportunity_id": { "type": ["string", "null"], "description": "关联机会；通用证据可为 null" },
+    "metric_id": { "type": ["string", "null"], "description": "对应 rubric 中的指标 ID，如 C.equipment_market_size" },
+    "claim": { "type": "string", "minLength": 1, "description": "这条证据支撑的具体断言，一句话" },
+
+    "value": {
+      "description": "数值型证据的取值。非数值型证据（如政策条目、管制条目）留 null，内容写在 claim 与 verbatim。",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["raw"],
+      "properties": {
+        "raw": { "type": ["string", "number"], "description": "来源中的原始表述，不做换算" },
+        "normalized": { "type": ["number", "null"], "description": "换算后的数值；换算规则写入 note" },
+        "unit": { "type": ["string", "null"], "description": "如 亿元人民币 / % / 家 / 年" },
+        "period": { "type": ["string", "null"], "description": "数据所属期间，如 2025 或 2024-2030E" },
+        "scope": { "type": ["string", "null"], "description": "口径范围，如 全球 / 中国大陆 / 仅前道设备" }
+      }
+    },
+
+    "verbatim": { "type": ["string", "null"], "description": "来源原文摘录，供回源核对。管制与政策类证据必填" },
+
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["grade", "type", "title", "publisher", "accessed_at", "locator"],
+      "properties": {
+        "grade": {
+          "enum": ["A", "B", "C", "D"],
+          "description": "A 官方统计与法定披露 / B 行业协会与标准组织 / C 券商与第三方咨询 / D 媒体与厂商宣传"
+        },
+        "type": {
+          "enum": ["official_statistics", "customs", "listed_filing", "prospectus", "policy_document",
+                   "patent_db", "industry_association", "standard_body", "yearbook",
+                   "brokerage_research", "consultancy_report", "media", "vendor_material", "other"]
+        },
+        "title": { "type": "string" },
+        "publisher": { "type": "string" },
+        "published_at": { "type": ["string", "null"], "description": "YYYY-MM-DD 或 YYYY" },
+        "url": { "type": ["string", "null"] },
+        "accessed_at": { "type": "string", "description": "YYYY-MM-DD" },
+        "locator": {
+          "type": "string",
+          "minLength": 1,
+          "description": "必须能定位到具体位置：页码/表号/章节/条目号。填不出 locator 一律判 unverified"
+        }
+      }
+    },
+
+    "cross_sources": {
+      "type": "array",
+      "description": "C 级来源必须有 ≥1 条独立交叉来源方可入表",
+      "items": { "type": "string", "pattern": "^EV-[0-9]{4}-[0-9]{4}$" }
+    },
+
+    "collector": { "type": "string", "description": "采集角色实例 ID，如 S2-03" },
+    "collected_at": { "type": "string" },
+
+    "verify_status": {
+      "enum": ["verified", "conflicting", "unverified", "not_found"],
+      "description": "只有 verified 能进入评分。conflicting 走仲裁，其余降级为 NA。"
+    },
+    "verified_by": { "type": ["string", "null"], "description": "核证角色实例 ID，如 C2-01" },
+    "verified_at": { "type": ["string", "null"] },
+    "conflict_with": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^EV-[0-9]{4}-[0-9]{4}$" },
+      "description": "conflicting 时必须列出冲突的其他证据 ID，不得只保留一个"
+    },
+    "note": { "type": ["string", "null"], "description": "换算规则、口径差异、已知局限" }
+  },
+
+  "allOf": [
+    {
+      "if": { "properties": { "source": { "properties": { "grade": { "const": "D" } } } } },
+      "then": {
+        "properties": { "verify_status": { "const": "not_found" } },
+        "description": "D 级来源永不入表，只能作为线索去追 A/B 级原始来源"
+      }
+    },
+    {
+      "if": { "properties": { "verify_status": { "const": "conflicting" } } },
+      "then": { "required": ["conflict_with"] }
+    }
+  ]
+}
