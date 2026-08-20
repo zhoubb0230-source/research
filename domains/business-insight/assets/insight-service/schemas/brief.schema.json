@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research.local/insight-service/brief.schema.json",
+  "title": "洞察任务包 Insight Brief",
+  "description": "把一个洞察需求表达成参数。骨架不变（见 ../spine.md），差异全部由本文件承载。新需求 = 新任务包，不是新流程。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["briefId", "title", "decisionQuestion", "subject", "criteria", "aggregation", "evidencePolicy", "output"],
+
+  "$defs": {
+    "dimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "type"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$" },
+        "name": { "type": "string" },
+        "type": {
+          "enum": ["ordinal", "categorical", "factual", "temporal"],
+          "description": "ordinal 可打分排序（需 anchors + weight）｜categorical 取值域，用于分组｜factual 事实字段｜temporal 时序，用于趋势与变化"
+        },
+        "weight": {
+          "type": "number", "minimum": 0, "maximum": 100,
+          "description": "仅 ordinal。参与 rank 算子时，全部 ordinal 维度的 weight 之和应为 100"
+        },
+        "anchors": {
+          "type": "object",
+          "description": "仅 ordinal。分档描述，键为分值。锚点必须是可判定的客观描述，不是程度副词",
+          "additionalProperties": { "type": "string" }
+        },
+        "domain": {
+          "type": "array", "items": { "type": "string" },
+          "description": "仅 categorical。取值域。取值域外的值一律记 other 并在报告中列出"
+        },
+        "unit": { "type": ["string", "null"], "description": "仅 factual / temporal" },
+        "ownerRole": {
+          "enum": ["analyst", "domain-analyst", "compliance"],
+          "default": "analyst",
+          "description": "由哪类专家负责刻画。domain-analyst 需要 domainPack"
+        },
+        "evidenceRequired": { "type": "boolean", "default": true },
+        "naPolicy": {
+          "enum": ["exclude_from_denominator", "treat_as_lowest", "block"],
+          "default": "exclude_from_denominator",
+          "description": "缺数据怎么办。默认从分母扣除——NA 不当 0 分，否则模型就有了编造的动机"
+        },
+        "note": { "type": ["string", "null"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "ordinal" } }, "required": ["type"] },
+          "then": { "required": ["anchors"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "categorical" } }, "required": ["type"] },
+          "then": { "required": ["domain"] }
+        }
+      ]
+    },
+
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "rule", "action", "evaluateAfter"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "rule": { "type": "string", "description": "可判定的排除条件，人类可读" },
+        "action": {
+          "enum": ["reject", "defer"],
+          "description": "reject → 出局池（全量留档，下轮复检）｜defer → 待补证池（本轮不参与聚合）"
+        },
+        "evaluateAfter": {
+          "enum": ["enumerate", "characterize"],
+          "description": "尽量取 enumerate：闸门前置能省一个量级的取证成本"
+        },
+        "dependsOn": {
+          "type": "array", "items": { "type": "string" },
+          "description": "evaluateAfter=characterize 时引用的维度 id"
+        },
+        "note": { "type": ["string", "null"] }
+      }
+    }
+  },
+
+  "properties": {
+    "briefId": { "type": "string", "pattern": "^BRIEF-[0-9]{4}-[0-9]{4}$" },
+    "version": { "type": "string", "default": "v1", "description": "一轮洞察进行中不得变更；变更须递增并整轮重跑" },
+    "frozenAt": { "type": ["string", "null"], "description": "冻结日期。未冻结不得用于正式运行" },
+    "title": { "type": "string" },
+    "createdBy": { "type": ["string", "null"] },
+    "createdAt": { "type": ["string", "null"] },
+
+    "decisionQuestion": {
+      "type": "string",
+      "minLength": 1,
+      "description": "这份洞察要支持什么决策。**必填且必须是一个决策，不是一个话题。** 答不上来的多半是检索需求而非洞察需求，应在分诊环节拦下"
+    },
+
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit", "boundary", "source"],
+      "properties": {
+        "unit": {
+          "type": "string",
+          "description": "洞察对象的单位。例：业务机会 / 厂商 / 产品 / 技术路线 / 事件 / 解释假说 / 方案选项"
+        },
+        "boundary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["includes", "excludes"],
+          "description": "什么算在内、什么算在外。边界不清是格局类洞察最常见的失败原因",
+          "properties": {
+            "includes": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+            "excludes": { "type": "array", "items": { "type": "string" } },
+            "note": { "type": ["string", "null"] }
+          }
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "enum": ["catalog_enumeration", "given", "baseline", "discovered", "hypothesis_generation"],
+              "description": "catalog_enumeration 目录穷举｜given 需求方给定清单｜baseline 上一批次｜discovered 取证过程中发现｜hypothesis_generation 由分析生成候选假说"
+            },
+            "catalogs": {
+              "type": "array",
+              "description": "type=catalog_enumeration 时必填。每项须可回溯定位",
+              "items": {
+                "type": "object", "additionalProperties": false,
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "locatorHint": { "type": ["string", "null"] },
+                  "grade": { "enum": ["A", "B", "C", "D"] }
+                }
+              }
+            },
+            "givenList": { "type": "array", "items": { "type": "string" }, "description": "type=given 时的对象清单" },
+            "baselineRef": { "type": ["string", "null"], "description": "type=baseline 时指向上一批次的产出" }
+          }
+        },
+        "cardinality": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "expected": { "type": ["integer", "null"], "description": "预期对象数；1 触发枚举退化" },
+            "topK": { "type": ["integer", "null"], "description": "进入深度刻画的对象数上限" }
+          }
+        }
+      }
+    },
+
+    "criteria": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dimensions"],
+      "properties": {
+        "dimensions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/dimension" },
+          "description": "可为空数组 → 刻画退化为事实摘录（兜底档），此时必须在 degradations 中声明"
+        },
+        "gates": { "type": "array", "items": { "$ref": "#/$defs/gate" } }
+      }
+    },
+
+    "aggregation": {
+      "type": "array",
+      "minItems": 1,
+      "description": "聚合算子，可组合（如 matrix + cluster）。契约见 ../aggregators.md",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["operator"],
+        "properties": {
+          "operator": { "enum": ["rank", "matrix", "cluster", "verdict", "diff", "rank_hypotheses"] },
+          "config": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "算子专属参数。rank: {adjustments}｜cluster: {byDimension}｜diff: {baselineRef}"
+          }
+        }
+      }
+    },
+
+    "evidencePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["grades", "minGrade", "maxAgeMonths"],
+      "properties": {
+        "grades": {
+          "type": "object",
+          "description": "等级机制通用，每级的**实例清单是领域专属的**，必须由本任务包声明。产业数据的 A 级和软件工具的 A 级不是一回事",
+          "additionalProperties": false,
+          "required": ["A", "B", "C", "D"],
+          "properties": {
+            "A": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+            "B": { "type": "array", "items": { "type": "string" } },
+            "C": { "type": "array", "items": { "type": "string" } },
+            "D": { "type": "array", "items": { "type": "string" }, "description": "永不入表，只作线索去追 A/B 级原始来源" }
+          }
+        },
+        "minGrade": { "enum": ["A", "B", "C"], "description": "入表最低等级。C 级须有独立交叉来源" },
+        "maxAgeMonths": {
+          "type": "integer", "minimum": 1,
+          "description": "**必填，强制思考时效性。** 工具能力对比 6 个月就可能过期，产业规模数据 24 个月仍可用。超龄证据须在报告中标记"
+        },
+        "directVerification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["available"],
+          "description": "对象能否被直接验证（跑一下、读代码、调 API）。可直接验证的证据强于任何二手来源，是 A+ 级",
+          "properties": {
+            "available": { "type": "boolean" },
+            "methods": { "type": "array", "items": { "type": "string" } },
+            "required": { "type": "boolean", "default": false, "description": "true 时，可验证而未验证的结论降置信度" }
+          }
+        },
+        "crossCheckRequired": { "type": "boolean", "default": true }
+      }
+    },
+
+    "temporal": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "无时间视角的需求全部留空即可（退化，非缺失）",
+      "properties": {
+        "asOf": { "type": ["string", "null"], "description": "现状的时点" },
+        "lookbackMonths": { "type": ["integer", "null"], "description": "回溯窗口。趋势与变化类判断需要" },
+        "horizonMonths": { "type": ["integer", "null"], "description": "前瞻窗口。预测类结论需要，且必须标注为判断" },
+        "reportValidityMonths": { "type": ["integer", "null"], "description": "报告有效期。变化快的领域必须给" }
+      }
+    },
+
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["template", "audience", "depth"],
+      "properties": {
+        "template": { "type": "string", "description": "相对仓库根的模板路径" },
+        "audience": { "type": "string" },
+        "depth": {
+          "enum": ["quick", "full"],
+          "description": "quick 缩小取证广度、证伪压到 1 轮，**但九个动作一个都不能少**；full 完整流水线"
+        },
+        "archiveTo": { "type": ["string", "null"], "description": "归档目录，如 domains/ai-coding/insights/" }
+      }
+    },
+
+    "domainPack": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "description": "领域知识包。由提需求的业务方维护，不由平台方写。为空则只用通用分析专家",
+      "properties": {
+        "ref": { "type": ["string", "null"] },
+        "glossary": { "type": "array", "items": { "type": "string" } },
+        "sources": { "type": "array", "items": { "type": "string" } },
+        "pitfalls": { "type": "array", "items": { "type": "string" }, "description": "该领域的已知口径陷阱" },
+        "lastReviewed": { "type": ["string", "null"], "description": "最后核对日期。过期的包要在报告上打标记" }
+      }
+    },
+
+    "degradations": {
+      "type": "array",
+      "description": "本任务包发生的退化。**必须在报告首屏显式呈现** —— 降级必须可见",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["action", "reason"],
+        "properties": {
+          "action": { "enum": ["frame", "enumerate", "characterize", "aggregate"] },
+          "reason": { "type": "string" },
+          "disclosure": { "type": "string", "description": "在报告中如何向读者说明这个退化的影响" }
+        }
+      }
+    },
+
+    "notes": { "type": ["string", "null"] }
+  }
+}

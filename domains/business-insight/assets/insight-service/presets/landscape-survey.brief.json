@@ -1,0 +1,121 @@
+{
+  "briefId": "BRIEF-2026-0002",
+  "version": "v1",
+  "frozenAt": null,
+  "title": "业界 AI Coding 工具现状测绘",
+  "createdBy": "研发效能侧",
+  "createdAt": "2026-08-19",
+
+  "decisionQuestion": "我们在研发流程中应引入哪一类 AI Coding 工具，以及自建与采购的边界划在哪里？",
+
+  "subject": {
+    "unit": "产品/工具",
+    "boundary": {
+      "includes": [
+        "IDE 内的编码助手与 Agent",
+        "命令行/终端编码 Agent",
+        "云端异步编码 Agent",
+        "代码评审与测试生成工具",
+        "面向企业的编码 Agent 平台"
+      ],
+      "excludes": [
+        "通用对话模型本身（除非提供专门的编码 Agent 形态）",
+        "仅做语法补全、无模型推理的传统插件",
+        "不面向代码产出的研发工具（项目管理、CI 本身）"
+      ],
+      "note": "边界不清是格局类洞察最常见的失败原因。判定标准：该产品是否以「产出可运行代码或代码变更」为主要交付物"
+    },
+    "source": {
+      "type": "catalog_enumeration",
+      "catalogs": [
+        { "name": "主要厂商官方产品目录", "locatorHint": "产品页", "grade": "A" },
+        { "name": "开源仓库与 awesome 类清单", "locatorHint": "仓库地址与 star 数", "grade": "B" },
+        { "name": "公开编码能力基准的参评名单", "locatorHint": "榜单快照日期", "grade": "B" },
+        { "name": "云厂商与 IDE 厂商的集成市场", "locatorHint": "市场条目", "grade": "A" }
+      ]
+    },
+    "cardinality": { "expected": 40, "topK": null }
+  },
+
+  "criteria": {
+    "dimensions": [
+      {
+        "id": "form", "name": "产品形态", "type": "categorical",
+        "domain": ["ide-plugin", "cli-agent", "cloud-async-agent", "review-bot", "enterprise-platform"],
+        "note": "cluster 算子按本维度分组"
+      },
+      {
+        "id": "repo_understanding", "name": "代码库理解方式", "type": "categorical",
+        "domain": ["none", "retrieval", "persistent-index", "whole-repo-context", "hybrid"],
+        "note": "这一维是当前真正拉开差距的地方之一"
+      },
+      {
+        "id": "autonomy", "name": "自主度", "type": "ordinal",
+        "anchors": {
+          "10": "端到端承接任务：自主规划、多文件改动、自测、提交 PR",
+          "8": "多文件任务，需人工确认关键步骤",
+          "6": "单文件编辑与重构",
+          "4": "行内/块级补全与建议",
+          "2": "仅问答，不直接改代码",
+          "0": "无编码能力"
+        },
+        "note": "ordinal 但不参与 rank（无 weight）——这里用它表达有序取值，不用于打分排序"
+      },
+      { "id": "model_strategy", "name": "模型策略", "type": "categorical", "domain": ["first-party-only", "third-party-only", "switchable", "byo-key"] },
+      { "id": "deployment", "name": "部署形态", "type": "categorical", "domain": ["saas-only", "self-hosted", "hybrid", "air-gapped"] },
+      { "id": "enterprise_controls", "name": "企业管控能力", "type": "categorical", "domain": ["none", "basic-sso", "rbac-audit", "full-governance"], "note": "含身份、权限、审计、数据驻留" },
+      { "id": "context_protocol", "name": "工具与上下文协议支持", "type": "categorical", "domain": ["proprietary", "mcp", "lsp-based", "multiple", "unknown"] },
+      { "id": "pricing_model", "name": "定价模式", "type": "factual", "unit": "文本描述 + 档位", "note": "必须给官方定价页的 evidence_ref，禁止凭印象" },
+      { "id": "license", "name": "开源/闭源与许可证", "type": "factual", "unit": "许可证名称" },
+      { "id": "benchmark_claims", "name": "公开基准表现", "type": "factual", "unit": "基准名 + 分数 + 快照日期", "note": "必须注明基准版本与日期；厂商自测与第三方复现分开记" },
+      { "id": "release_cadence", "name": "版本节奏与关键动态", "type": "temporal", "unit": "月", "note": "回溯窗口内的重要版本与方向变化" }
+    ],
+    "gates": [
+      { "id": "GS-1", "name": "边界闸", "rule": "主要交付物不是可运行代码或代码变更", "action": "reject", "evaluateAfter": "enumerate" },
+      { "id": "GS-2", "name": "存活闸", "rule": "近 12 个月无任何版本发布或官方动态", "action": "reject", "evaluateAfter": "enumerate", "note": "已停更的产品移入出局池但留档——它的退出本身是格局信号" },
+      { "id": "GS-3", "name": "可核实闸", "rule": "无任何 A 级来源可佐证其存在与能力", "action": "defer", "evaluateAfter": "characterize", "dependsOn": ["form", "pricing_model"] }
+    ]
+  },
+
+  "aggregation": [
+    { "operator": "cluster", "config": { "byDimension": "form", "otherGroupRequired": true } },
+    { "operator": "matrix", "config": { "keyDifferentiatorCount": 5, "emptyCellPolicy": "must-mark-unknown" } }
+  ],
+
+  "evidencePolicy": {
+    "grades": {
+      "A": ["官方产品文档", "官方定价页", "官方 changelog / release notes", "开源仓库源码与提交历史", "可复现的第三方基准结果"],
+      "B": ["厂商技术博客与工程文章", "公开技术会议材料", "官方支持的集成市场条目"],
+      "C": ["第三方评测文章", "分析师报告"],
+      "D": ["新闻报道", "社交媒体与社区讨论", "厂商营销材料与竞品对比页"]
+    },
+    "minGrade": "B",
+    "maxAgeMonths": 6,
+    "directVerification": {
+      "available": true,
+      "methods": ["安装并实际试用", "阅读开源仓库源码", "调用其公开 API", "在同一组任务上实测对比"],
+      "required": true
+    },
+    "crossCheckRequired": true
+  },
+
+  "temporal": {
+    "asOf": "2026-08",
+    "lookbackMonths": 18,
+    "horizonMonths": 12,
+    "reportValidityMonths": 6
+  },
+
+  "output": {
+    "template": "templates/insight.md",
+    "audience": "研发效能与工程管理",
+    "depth": "full",
+    "archiveTo": "domains/ai-coding/insights/"
+  },
+
+  "domainPack": null,
+
+  "degradations": [],
+
+  "notes": "本预设与 BRIEF-2026-0001 参数取值几乎完全不同（对象单位、维度类型、算子、证据等级实例、时效要求），但走同一条骨架。它同时验证了两点：categorical 为主的判据可用、以及 directVerification 这一档在软件类洞察中成立——这是产业机会洞察拿不到的一手证据。输出模板直接复用仓库既有的 templates/insight.md。"
+}
