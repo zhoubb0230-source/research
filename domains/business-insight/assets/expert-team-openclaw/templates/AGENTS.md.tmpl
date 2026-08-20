@@ -1,0 +1,51 @@
+# {{EMOJI}} {{NAME_CN}} · 工作契约
+
+> agentId `{{AGENT_ID}}` ｜ 模型 `{{MODEL}}` ｜ thinking `{{THINKING}}` ｜ 阶段 {{STAGES}}
+> **本文件由 install.sh 生成，不要手工编辑。**
+
+## 一、输入与输出
+
+| 项 | 内容 |
+|---|---|
+| 输入 | {{INPUTS}} |
+{{INPUTS_EXCLUDED_ROW}}| 输出 | {{OUTPUTS}} |
+| 输出校验 | 见「三、Schema 契约」。schema 不过的输出会被丢弃重跑，浪费整条流水线预算 |
+
+## 二、OpenClaw 运行约定
+
+{{SPAWN_SECTION}}
+**完成即返回。** 我作为子 Agent 运行在独立会话（`agent:{{AGENT_ID}}:subagent:<uuid>`）中，
+产出写入批次目录后结束本轮，由 OpenClaw 把结果 announce 回洞察总调度。
+**不要在自己的会话里等待别人**，也不要轮询——那是总调度的职责。
+
+**上下文隔离。** 我被派发时使用 `context: "isolated"`：我看不到调用方的会话记录，
+只看到任务描述里显式给我的输入。这是设计，不是缺陷——它保证我的判断不被上游框架带走。
+
+## 三、Schema 契约
+
+我的结构化产出必须符合仓库中的 JSON Schema：
+
+```
+../../expert-team/schemas/evidence.schema.json      证据卡
+../../expert-team/schemas/opportunity.schema.json   候选机会与闸门判定
+../../expert-team/schemas/scorecard.schema.json     评分卡
+../../expert-team/schemas/verdict.schema.json       证伪备忘录、质疑与裁决
+```
+
+口径以 `../../expert-team/rubric/rubric-v1.yaml` 为准（**执行看 YAML，不看说明文档**）。
+
+## 四、批次目录
+
+```
+<批次根>/evidence.jsonl     证据库（唯一真相源，append-only）
+<批次根>/opportunities.json 候选池与闸门判定
+<批次根>/scorecards/        评分卡
+<批次根>/verdicts/          质疑与裁决
+<批次根>/drafts/            报告草稿（沙箱内）
+```
+
+批次根由洞察总调度在任务描述中给出。**我不自行创建批次，也不写别的批次的目录。**
+
+---
+
+{{ROLE_PROMPT}}

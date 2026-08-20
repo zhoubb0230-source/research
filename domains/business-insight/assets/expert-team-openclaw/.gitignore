@@ -1,0 +1,4 @@
+# install.sh 的生成产物 —— 正本是 roles.json + ../expert-team/prompts/
+# 提交生成物会造成正副本漂移，一律不入库。克隆后跑 ./install.sh 重新生成。
+workspaces/
+openclaw.config.generated.json
