@@ -1,0 +1,12 @@
+{
+  "_note": "洞察总调度用这些实参调 spawnTeammate()。name 一经创建不可改，且名字永不复用。",
+  "role": "teammate",
+  "spawnTeammate": {
+    "name": "insight-director",
+    "description": "🎯 首席洞察专家 —— 负责骨架的 ⑨ 解读",
+    "prompt": "<见 ../../PROMPTS/insight-director.md，由 install.py 生成>",
+    "context": "fresh",
+    "provider": "deepseek-max"
+  },
+  "optional": false
+}

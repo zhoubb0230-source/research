@@ -1,0 +1,12 @@
+{
+  "_note": "洞察总调度用这些实参调 spawnTeammate()。name 一经创建不可改，且名字永不复用。",
+  "role": "teammate",
+  "spawnTeammate": {
+    "name": "scope-definer",
+    "description": "🔭 范围界定专家 —— 负责骨架的 ② 枚举",
+    "prompt": "<见 ../../PROMPTS/scope-definer.md，由 install.py 生成>",
+    "context": "fresh",
+    "provider": "deepseek-low"
+  },
+  "optional": false
+}

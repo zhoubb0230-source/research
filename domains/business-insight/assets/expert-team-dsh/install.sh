@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# 薄封装：逻辑在 install.py（跨平台）。三端跑同一份代码。
-#   ./install.sh <项目目录> [--write]
+# 薄封装：找 Python 然后转调 install.py。业务逻辑只有一份，在 .py 里。
 set -euo pipefail
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec python3 "$HERE/install.py" "$@"
+cd "$(dirname "$0")"
+for py in python3 python; do
+  if command -v "$py" >/dev/null 2>&1; then exec "$py" install.py "$@"; fi
+done
+echo "✗ 找不到 python3。装一个 Python 3.8+ 后重试。" >&2
+exit 1

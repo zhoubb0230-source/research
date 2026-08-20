@@ -1,0 +1,12 @@
+{
+  "_note": "洞察总调度用这些实参调 spawnTeammate()。name 一经创建不可改，且名字永不复用。",
+  "role": "teammate",
+  "spawnTeammate": {
+    "name": "comparative-analyst",
+    "description": "📊 对比分析专家 —— 负责骨架的 ⑤ 刻画 ⑥ 聚合",
+    "prompt": "<见 ../../PROMPTS/comparative-analyst.md，由 install.py 生成>",
+    "context": "fresh",
+    "provider": "deepseek-high"
+  },
+  "optional": false
+}

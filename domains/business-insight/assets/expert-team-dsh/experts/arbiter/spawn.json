@@ -1,0 +1,12 @@
+{
+  "_note": "洞察总调度用这些实参调 spawnTeammate()。name 一经创建不可改，且名字永不复用。",
+  "role": "teammate",
+  "spawnTeammate": {
+    "name": "arbiter",
+    "description": "⚖️ 争议仲裁专家 —— 负责骨架的 ⑧ 仲裁",
+    "prompt": "<见 ../../PROMPTS/arbiter.md，由 install.py 生成>",
+    "context": "fresh",
+    "provider": "deepseek-high"
+  },
+  "optional": false
+}

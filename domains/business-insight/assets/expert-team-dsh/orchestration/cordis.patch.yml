@@ -1,0 +1,189 @@
+# ===========================================================================
+# 业务洞察专家团 · dsh 宿主组合覆盖
+# ---------------------------------------------------------------------------
+# 放置：<profile 目录>/cordis.patch.yml 或 <dshHome>/cordis.patch.yml
+#       （profile 级与 home 级都支持，再叠 --patch）
+#
+# ⚠️ 本文件的**顶层形状**仍是本包最需要实机确认的一处。
+#    各插件的 config 字段来自 docs/config-catalog.md（自动生成，可信），
+#    但 patch 文件本身的 verbatim 嵌套没有官方示例。
+#
+#    上线前必须执行，并按实际输出调整：
+#        dsh --profile web --dump-config
+#
+#    **形状错了不报错，只是静默失效。** 所以先 dump-config 确认，再跑批次。
+# ===========================================================================
+
+plugins:
+
+  # =========================================================================
+  # 1. 算力档位：一档一条 provider 路由
+  # -------------------------------------------------------------------------
+  # ⚠️ 这是 dsh 与 OpenClaw 最大的结构差异。
+  #
+  #    OpenClaw 的思考档是【逐 agent】的字段（entries.*.thinkingDefault）。
+  #    dsh 的 reasoningEffort 是【provider 级】的配置，AgentOptions 只有
+  #    { provider, model, maxTokens } 三个字段 —— 没有 effort，也没有 prompt。
+  #
+  #    所以要给不同专家不同算力，只能【一档注册一条路由】，
+  #    再在 spawnTeammate 时用 provider 参数选路由。
+  #
+  # ⚠️ 待校验（本包第 1 号风险）：
+  #    "provider 路由名" 是否就是这里的 row id。文档说 AgentOptions.provider 是
+  #    "Registered provider route (must have a registered adapter at call time)"，
+  #    但没说路由名怎么来。dump-config / 建会话时的 provider 选择器里看实际取值。
+  #
+  #    **如果一个 deployment 只能注册一条 deepseek 路由**，那么：
+  #      · 全队共用一个 effort 档，逐专家算力差异【无法实现】
+  #      · 折中：把 effort 设成 high，并接受质疑与解读拿不到 max
+  #      · 不要把"建议 effort"写进提示词就当数 —— 那是自述，不是配置
+  # =========================================================================
+
+  # ---- 低档：枚举 / 取证 / 核证 / 成文 ----
+  # 注意：dsh 只有 off | low | high | max，**没有 medium**。
+  # 原设计中 medium 档的四个角色一律落到 low，影响见 DSH-NOTES.md §6。
+  deepseek-low:
+    name: '@deepseek-ai/dsh-llm-deepseek'
+    config:
+      apiKeyEnv: DEEPSEEK_API_KEY
+      thinking: enabled
+      reasoningEffort: low
+      retryPolicy:
+        maxRetries: 3
+
+  # ---- 高档：调度 / 规划 / 刻画聚合 / 领域 / 合规 / 仲裁 ----
+  deepseek-high:
+    name: '@deepseek-ai/dsh-llm-deepseek'
+    config:
+      apiKeyEnv: DEEPSEEK_API_KEY
+      thinking: enabled
+      reasoningEffort: high
+      retryPolicy:
+        maxRetries: 3
+
+  # ---- 最高档：证伪 / 解读 ----
+  # 最难的两个判断给最多的算力，这是刻意的。
+  deepseek-max:
+    name: '@deepseek-ai/dsh-llm-deepseek'
+    config:
+      apiKeyEnv: DEEPSEEK_API_KEY
+      thinking: enabled
+      reasoningEffort: max
+      retryPolicy:
+        maxRetries: 3
+
+  # ---- 异源：质疑审查专家【必须】换一个模型家族 ----
+  # ⚠️ 这是本方案在 dsh 上第 2 号风险。
+  #    质疑审查专家的异源要求是"不同模型"，不是"不同 effort"。
+  #    只注册 DeepSeek 一家的话，红队与刻画同源，**同源盲区依然存在**，
+  #    对抗的有效性会打折。
+  #
+  #    可选的第二家（都在官方 config-catalog 里）：
+  #      @deepseek-ai/dsh-llm-pi-ai          另一个直连 LLM 提供方
+  #      @deepseek-ai/dsh-subagent-claude-code / -codex / -acp
+  #                                          把外部 harness 接成子代理
+  #
+  #    下面这条默认被注释掉 —— 打开它需要你先有对应的凭据。
+  #    不打开就跑，请在验收时如实记下"红队与刻画同源"这一项退化。
+  #
+  # redteam-alt:
+  #   name: '@deepseek-ai/dsh-llm-pi-ai'
+  #   config:
+  #     apiKeyEnv: <你的环境变量名>
+  #     reasoningEffort: max
+
+  # =========================================================================
+  # 2. Agent 循环：只声明【一个】启动时的 agent —— Lead
+  # -------------------------------------------------------------------------
+  # ⚠️ 更正上一版：上一版在这里列了 12 个 agent id。那与 agent-team 的拓扑矛盾。
+  #
+  #    agent-loop.agents[] 是【进程启动时创建或恢复】的顶层 agent；
+  #    agent-team 的队友是【运行时由 Lead 用 spawnTeammate 建】的直接子会话。
+  #    两条路都列一遍，会得到 12 个互不相识的顶层 agent，
+  #    外加 Lead 运行时又建出 11 个队友 —— 名册对不上，消息也送不到。
+  #
+  #    正确形态：这里只有 Lead。其余 11 位在运行时按需建。
+  # =========================================================================
+  agent-loop:
+    name: '@deepseek-ai/dsh-agent-loop'
+    config:
+      # 取证阶段是并发大头。撞速率限制的表现是大面积超时，先调低这个再怀疑提示词。
+      maxParallelToolCalls: 8
+      agents:
+        - id: chief-coordinator     # 🧭 洞察总调度 —— Team Lead
+          provider: deepseek-high
+          # cwd 决定 AGENTS.md 链的加载范围（见下方 agent-instructions）。
+          # 队友共享 Lead 的 cwd，所以这一层是【全队共用】的。
+          cwd: <WORKDIR>
+
+  # =========================================================================
+  # 3. 团队级共享人格层：项目 AGENTS.md
+  # -------------------------------------------------------------------------
+  # dsh 的 AGENTS.md 是【按目录】加载的：从项目根走到会话 cwd，逐目录读候选文件，
+  # 以 <system-reminder> 框住注入为 user-role 消息。
+  #
+  # ⚠️ 因此它【无法区分专家】—— 队友共享同一个 cwd，拿到的是同一份。
+  #    这与 OpenClaw 的"每位专家一个工作区、各自一份 AGENTS.md"是结构性差异。
+  #
+  #    本方案的用法：把它当作【全队共用层】，放护栏与委托方模型。
+  #    逐专家的人格走 spawnTeammate(prompt)。
+  #
+  # 字段来源：docs/config-catalog.md → dsh-agent-instructions
+  # =========================================================================
+  agent-instructions:
+    name: '@deepseek-ai/dsh-agent-instructions'
+    config:
+      # 渲染预算，必填。护栏 + 委托方模型 + 批次约定实测约 6 KB，留足余量。
+      maxBytes: 32768
+      maxSourceBytes: 262144
+      projectRootMarkers: ['.git']
+      # 保留默认候选即可。加 SOUL.md 之类没有意义 ——
+      # 这一层本来就区分不了专家，多几个文件名只是把同一份内容拆开。
+      instructionFileCandidates: ['AGENTS.md', 'CLAUDE.md']
+      localInstructionFileCandidates: ['AGENTS.local.md']
+
+  # =========================================================================
+  # 4. 技能发现
+  # -------------------------------------------------------------------------
+  # 本方案把 12 位专家的技能装到项目级 <项目>/.dsh/skills/（rank 100，最高优先）。
+  # preset 自带的那一份是可选的第二处，见 preset/business-insight-team/agent.cordis.yml。
+  #
+  # ⚠️ frontmatter 的两个键【省略时默认 true】：
+  #      disable-model-invocation 省略 = true = 模型看不到这个技能
+  #    所以每份 SKILL.md 都必须显式写 `disable-model-invocation: false`。
+  #    正本里已经写了，不要在复制时丢掉。
+  # =========================================================================
+  skill-filesystem:
+    name: '@deepseek-ai/dsh-skill-filesystem'
+    config:
+      includeDefaultRoots: true
+      watch: true
+
+  # =========================================================================
+  # 5. 多 Agent 协作
+  # -------------------------------------------------------------------------
+  # ⚠️ maxMembers 默认 8，本方案要 11 位队友 —— 不改会在建到第 8 位时失败。
+  #    而且它统计的是【曾经 provision 过的每一个名字，含失败的】，且名字永不复用。
+  #    一次批次里若有队友建失败重来，名额会被吃掉，所以留足余量。
+  #
+  # ⚠️ 名册是【扁平】的，且【只有 Lead 能建队友】。
+  #    所以数据采集专家在 dsh 上【不能】自我 fan-out 并行取证 ——
+  #    并行必须由 Lead 拆成多个任务下发。这与 OpenClaw 侧不同。
+  # =========================================================================
+  agent-team:
+    name: '@deepseek-ai/dsh-experimental-agent-team'
+    config:
+      maxMembers: 24
+      maxTasks: 256
+      maxPendingMessagesPerMember: 64
+      # 单条消息上限 64 KiB。派任务时传【文件路径】，不要把证据库贴进消息体。
+      maxMessageBytes: 65536
+      disposalTimeoutMs: 5000
+
+# ---------------------------------------------------------------------------
+# 刻意不在这里配置的东西
+# ---------------------------------------------------------------------------
+# · 逐专家人格   → spawnTeammate(prompt)，实参见 ../experts/<agentId>/spawn.json
+# · 逐专家工具面 → 【dsh 做不到】。队友共用组合与 cwd，见 DSH-NOTES.md §4
+# · 判据与口径   → 每批次的 brief.json，不进平台配置
+# · 发布闸       → bin/publish-report.sh，是脚本不是配置，见 DSH-NOTES.md §5

@@ -1,4 +1,1 @@
-# install.sh 的生成产物在目标项目的 .dsh/skills/ 下，不在本目录。
-# 这里只忽略可能的本地试跑残留。
-skills/
-*.local.yml
+*.bak

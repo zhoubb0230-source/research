@@ -1,0 +1,12 @@
+{
+  "_note": "洞察总调度用这些实参调 spawnTeammate()。name 一经创建不可改，且名字永不复用。",
+  "role": "teammate",
+  "spawnTeammate": {
+    "name": "data-collector",
+    "description": "🔍 数据采集专家 —— 负责骨架的 ③ 取证",
+    "prompt": "<见 ../../PROMPTS/data-collector.md，由 install.py 生成>",
+    "context": "fresh",
+    "provider": "deepseek-low"
+  },
+  "optional": false
+}

@@ -1,202 +1,174 @@
-# 业务洞察专家团 · DeepSeek Harness 试跑包
+# 业务洞察专家团 · DeepSeek Harness 部署包
 
-把 `../insight-service/` 的十动作骨架落到本地 dsh 上，用于**真实试跑**。
+把 [`../expert-team/experts/`](../expert-team/experts/) 的 12 位专家装配到 dsh 上的
+**可直接部署形态**。
 
-- 骨架正本：[`../insight-service/spine.md`](../insight-service/spine.md)
-- 任务包规范：[`../insight-service/schemas/brief.schema.json`](../insight-service/schemas/brief.schema.json)
-- **平台事实与待校验项：[`DSH-NOTES.md`](DSH-NOTES.md) ← 跑之前读这个**
+| 读这个 | 干什么 |
+|---|---|
+| [`../expert-team/BOUNDARIES.md`](../expert-team/BOUNDARIES.md) | **先读。** 配置 / 人格 / 技能的三层边界 |
+| [`DSH-NOTES.md`](DSH-NOTES.md) | **上线前必读。** 平台事实、**dsh 落不下去的三样东西**、四项待校验 |
+| [`../expert-team/experts/README.md`](../expert-team/experts/README.md) | 12 位专家的名册 |
 
-## 12 位专家 ↔ 十个动作
+## 一句话：dsh 与 OpenClaw 的关键差异
 
-| 动作 | 专家 | agentId | effort |
-|---|---|---|---|
-| 全程 | 🧭 洞察总调度 | `chief-coordinator` | high |
-| ① 界定（含分诊） | 🗺️ 洞察规划专家 | `insight-planner` | high |
-| ② 枚举 | 🔭 范围界定专家 | `scope-definer` | low |
-| ③ 取证 | 🔍 数据采集专家 | `data-collector` | low |
-| ④ 核证 | ✅ 数据核证专家 | `fact-verifier` | low |
-| ⑤ 刻画 ⑥ 聚合 | 📊 对比分析专家 | `comparative-analyst` | high |
-| ⑤ 刻画（领域维度） | ⚙️ 领域分析专家（可选） | `domain-analyst` | high |
-| 闸门 + 合规维度 | 🛡️ 合规审查专家（可选） | `compliance-reviewer` | high |
-| ⑦ 证伪 | 🥊 质疑审查专家 | `red-team-challenger` | **max** |
-| ⑧ 仲裁 | ⚖️ 争议仲裁专家 | `arbiter` | high |
-| ⑨ 解读 | 🎯 首席洞察专家 | `insight-director` | **max** |
-| ⑩ 成文 | 📝 报告生成专家 | `report-writer` | low |
+**dsh 无法逐专家收窄工具面。** 队友共用 Lead 的 preset 组合与工作目录。
 
-最难的两个判断——**推翻结论**和**解读意味着什么**——拿到最高算力档。
+OpenClaw 版里"对比分析专家没有联网能力""报告生成专家写不到发布目录"是**机制**；
+在 dsh 上它们退化成 `SOUL.md` 里的**承诺**。
+验收方式必须跟着变——见 [`DSH-NOTES.md`](DSH-NOTES.md) §4。
 
 ## 目录
 
 ```
 expert-team-dsh/
-├── README.md               本文件
-├── DSH-NOTES.md            平台事实、适配决策、4 项待校验 ← 必读
-├── roles.json              12 角色的装配元数据与附加契约
-├── playbook.md             总调度的十动作 + 五回边运行手册
-├── cordis.patch.yml        配置覆盖（**唯一形状待校验的文件**）
-├── install.py              ★ 生成逻辑（跨平台，已实测）
-├── install.ps1             Windows 薄封装
-├── install.sh              Linux/macOS 薄封装
+├── README.md                  本文件
+├── DSH-NOTES.md               平台事实 / 能力缺口 / 待校验项 ← 上线前必读
+├── orchestration/             【编排框架】
+│   ├── cordis.patch.yml       宿主组合覆盖：provider 档位路由 + Lead + AGENTS.md 预算
+│   │                          + 技能根 + agent-team 上限
+│   └── preset/business-insight-team/
+│       ├── agent.cordis.yml   preset 组合（全队共用）：护栏 persona + preset 自带技能根
+│       └── preset.yml         展示元数据（只有 name 与 description）
+├── experts/                   【12 位专家】每位一个独立目录
+│   └── <agentId>/
+│       ├── spawn.json         该专家的 spawnTeammate 实参（T1）
+│       └── README.md          它的约束落在哪、哪些在 dsh 上落不下去
+├── runtime/
+│   ├── lead.md                dsh 运行约定（三个接口 / 名额 / 消息大小），拼进 Lead 人格
+│   └── teammate.md            dsh 运行约定（fresh 上下文 / 共享 cwd），拼进队友人格
+├── install.py                 ★ 装配逻辑（跨平台，已实测）
+├── install.sh / install.ps1   薄封装：找 Python 然后转调
 └── bin/
-    ├── publish_report.py   ★ 发布闸逻辑（跨平台，已实测）
-    ├── publish-report.ps1  Windows 薄封装
-    └── publish-report.sh   Linux/macOS 薄封装
+    ├── publish_report.py      ★ 发布闸逻辑（跨平台，已实测）
+    └── publish-report.sh / .ps1
 ```
 
-**逻辑只有一份，在 `.py` 里；`.ps1` / `.sh` 只负责找 Python 然后转调。**
-这样三端跑的是同一份代码，不会出现"Linux 上好好的、Windows 上行为不一样"。
+## 装配后的工作目录长什么样
+
+```
+<工作目录>/
+├── AGENTS.md                     全队共用层：护栏 + 委托方模型 + 批次约定 + 三条编排铁律
+│                                 （dsh 按目录加载，队友共享 cwd → 这是全队一份）
+└── .dsh/
+    ├── PROMPTS/<name>.md         12 位专家的人格正文 ← spawnTeammate(prompt) 的实参
+    ├── skills/<skill>/SKILL.md   13 个技能（rank 100，优先级最高）
+    └── roster.json               名册：name → 中文名 / provider 路由 / 人格文件 / 技能
+```
+
+**人格为什么是 `PROMPTS/*.md` 而不是配置**：`AgentOptions` 只有
+`{ provider, model, maxTokens }` —— **没有 `prompt` 字段**。人格的唯一通道是
+`spawnTeammate(prompt)`。这一点已从 `docs/subsystems/core.md` 确认。
+
+**技能为什么是共用目录**：队友共用 Lead 的组合，无法逐队友给不同的技能表。
+"谁该用哪个技能"写在各自的人格里。
+
+## 12 位专家
+
+| name | 角色 | 动作 | provider 路由 | context |
+|---|---|---|---|---|
+| `chief-coordinator` | 🧭 洞察总调度 | 全程（**Team Lead**） | `deepseek-high` | —（agent-loop 创建） |
+| `insight-planner` | 🗺️ 洞察规划专家 | ① 界定（含分诊） | `deepseek-high` | `fresh` |
+| `scope-definer` | 🔭 范围界定专家 | ② 枚举 | `deepseek-low` | `fresh` |
+| `data-collector` | 🔍 数据采集专家 | ③ 取证 | `deepseek-low` | `fresh` |
+| `fact-verifier` | ✅ 数据核证专家 | ④ 核证 | `deepseek-low` | `fresh` |
+| `comparative-analyst` | 📊 对比分析专家 | ⑤ 刻画 ⑥ 聚合 | `deepseek-high` | `fresh` |
+| `domain-analyst` | ⚙️ 领域分析专家（可选） | ⑤ 刻画（领域维度） | `deepseek-high` | `fresh` |
+| `compliance-reviewer` | 🛡️ 合规审查专家（可选） | 闸门 + 合规维度 | `deepseek-high` | `fresh` |
+| `red-team-challenger` | 🥊 质疑审查专家 | ⑦ 证伪 | **`deepseek-max`** | `fresh` |
+| `arbiter` | ⚖️ 争议仲裁专家 | ⑧ 仲裁 | `deepseek-high` | `fresh` |
+| `insight-director` | 🎯 首席洞察专家 | ⑨ 解读 | **`deepseek-max`** | `fresh` |
+| `report-writer` | 📝 报告生成专家 | ⑩ 成文 | `deepseek-low` | `fresh` |
+
+`context` 的合法取值是 **`fresh` | `fork`**，不是 `isolated`。
+
+⚠️ **红队异源在 dsh 上默认不成立** —— `deepseek-max` 只换了 effort 档，模型家族没换。
+要真正异源需要注册第二家 provider，见 `orchestration/cordis.patch.yml` 里 `redteam-alt` 那一段。
 
 ## 跑起来
 
 ### 前置
 
 - dsh 可运行；`DEEPSEEK_API_KEY` 已设
-- **Python 3.8+**（生成器与校验脚本用，仅标准库；Windows 上 `python` / `py -3` 均可）
+- **Python 3.8+**（装配与校验脚本用，仅标准库）
 - 一个工作目录（dsh 以最近的 `.git` 祖先为项目根）
-
-Windows 额外说明：脚本会自动把控制台与 Python IO 设为 UTF-8，生成的 `SKILL.md`
-**不带 BOM、统一 LF** —— BOM 会破坏 frontmatter 解析，这一点已在生成器里处理。
 
 ### 步骤
 
-**Windows（PowerShell）**
+```bash
+cd domains/business-insight/assets/expert-team-dsh
 
-```powershell
-cd domains\business-insight\assets\expert-team-dsh
+# 1. 预演：看会生成哪些文件，不落盘
+./install.sh /path/to/工作目录
 
-# 1. 预演：看看会生成哪 12 个 skill，不落盘
-.\install.ps1 -Target D:\work\insight-trial
+# 2. 写入（可选 --preset 同时装 preset 目录）
+./install.sh /path/to/工作目录 --write
+./install.sh /path/to/工作目录 --write --preset ~/.dsh/.agent-presets
 
-# 2. 写入 <工作目录>\.dsh\skills\ 与 .dsh\roster.json
-.\install.ps1 -Target D:\work\insight-trial -Write
-
-# 3. 复制配置覆盖，然后**务必**核对形状（见 DSH-NOTES.md §5）
-Copy-Item cordis.patch.yml D:\work\insight-trial\
-dsh --profile web --dump-config
+# 3. 复制配置覆盖，然后【务必】核对形状
+cp orchestration/cordis.patch.yml <profile 目录>/
+dsh --profile web --dump-config          # ← 形状错了不报错，只静默失效
 
 # 4. 启动
-npx @deepseek-ai/dsh web        # http://127.0.0.1:3080
+npx @deepseek-ai/dsh web                 # http://127.0.0.1:3080
 ```
 
-若 PowerShell 拦执行策略，本会话临时放行即可（不改全局设置）：
+Windows：`.\install.ps1 <目录> -Write`，或直接 `python install.py <目录> --write`
+（跨平台，行为完全一致；生成的文件统一 UTF-8 无 BOM、LF）。
 
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-```
+若 PowerShell 拦执行策略，本会话临时放行即可：
+`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`。
 
-**或者完全绕开 PowerShell**，直接跑 Python（跨平台，行为完全一致）：
+### 第一次试跑用哪个需求
 
-```powershell
-python install.py D:\work\insight-trial            # 预演
-python install.py D:\work\insight-trial --write    # 写入
-```
-
-**Linux / macOS**
-
-```bash
-./install.sh /path/to/工作目录            # 预演
-./install.sh /path/to/工作目录 --write    # 写入
-```
-
-### 第一次试跑建议用哪个需求
-
-用 `../insight-service/presets/landscape-survey.brief.json`（AI Coding 工具现状）。
+用 [`../insight-service/presets/landscape-survey.brief.json`](../insight-service/presets/landscape-survey.brief.json)（AI Coding 工具现状）。
 
 理由是**可验证性**：你们自己就是这个领域的专家，报告出来五分钟就知道靠不靠谱——
 哪家漏了、路线分错了、某个能力写错了，一眼可见。
-换成产业机会筛选，要等几个月才知道对错，试跑就失去了意义。
-
-它还有三个附加好处：证据可直接验证（装上跑一下就知道）、
-产出可直接入 `domains/ai-coding/insights/`（那个领域现在是空的）、
-成本比全量产业筛选低一个数量级。
 
 ```bash
-# 校验任务包
 python3 ../insight-service/checks/validate_brief.py \
         ../insight-service/presets/landscape-survey.brief.json
 ```
 
-然后在 dsh UI 里调用 `insight-planner`（它是 `user-invocable`）发起 ① 界定。
+然后在 dsh UI 里对 `chief-coordinator` 发起需求。
+**第一次对它说话时，把 `.dsh/PROMPTS/chief-coordinator.md` 的正文贴进去**——
+Lead 不是 `spawnTeammate` 建的，它的人格要手动带入一次。
 
 ### 发布
 
-```powershell
-# Windows
-.\bin\publish-report.ps1 -Draft <草稿.md> -Evidence <批次根>\evidence.jsonl -PublishDir <发布目录>
-# 或直接
-python bin\publish_report.py <草稿.md> <批次根>\evidence.jsonl <发布目录>
-```
-
 ```bash
-# Linux / macOS
 ./bin/publish-report.sh <草稿.md> <批次根>/evidence.jsonl <发布目录>
 ```
 
-退出码非 0 = 没发布。正确处置是回边 R4：退回 ③ 取证补证，**不是改措辞绕过**。
+⚠️ **发布由人执行，不在 dsh 里跑。** preset 里刻意没装 bash/终端类工具，
+所以没有任何一位专家能自己跑脚本绕过闸门。理由见 `DSH-NOTES.md` §5。
 
-## 专家信息放在哪 —— 以及一个必须知道的坑
-
-**是的，12 个角色全部生成为 skill**：`<项目>/.dsh/skills/<agentId>/SKILL.md`。
-外加一份 `.dsh/roster.json` 清单（agentId → 中文名 → skill 路径 → 建议 effort）。
-
-**但 skill ≠ 人格绑定。** 官方文档对 skill 的定义是"可扩展 agent 能力的**可选指令**"——
-它是被发现、被调用的资源，不是"这个 agent 就是这个角色"的自动绑定。
-只把文件放进去、什么都不做，队友不会变成那个专家。
-
-绑定发生在建队友的那一刻：
-
-```
-spawnTeammate(
-  name        = <agentId>,
-  description = <roster.json 里的中文名与职责>,
-  prompt      = <该 SKILL.md 的正文>,     ← 人格在这里绑上去
-  contextMode = isolated,
-  provider    = <你的 provider>
-)
-```
-
-`SpawnTeammateRequest` 带 `prompt` 字段，这是文档明确的。`roster.json` 就是给总调度
-查路径用的。playbook 的「角色人格怎么绑上去」一节写了完整流程。
-
-> 为什么不干脆写进 `cordis.patch.yml` 的 `agents[]`？因为 `AgentOptions` 的完整字段
-> 我没能从文档确认（见 DSH-NOTES.md §5 第 2 项）。等你 `--dump-config` 看到真实字段，
-> 如果它支持 per-agent prompt，那条路比运行时传更硬——到时候可以改。
+退出码非 0 = 没发布。正确处置是回边 R4 退回取证补证，**不是改措辞绕过**。
 
 ## 跑完怎么判断跑对了
 
-**照 [`../insight-service/acceptance.md`](../insight-service/acceptance.md) 走八项检验，一个下午做完。**
+照 [`../insight-service/acceptance.md`](../insight-service/acceptance.md) 走八项检验，一个下午做完。
 
-系统质量是**当场可测**的——要等几个月的是"这个结论最终对不对"，不是"这套系统靠不靠谱"。
-八项里 V4（枚举召回，专家盲列 10 个再比对）和 V7（质疑有效性，至少 1 条"我没想到"）
+八项里 V4（枚举召回，专家盲列 10 个再比对）与 V7（质疑有效性，至少 1 条"我没想到"）
 最有信息量，也最容易被跳过。
 
-## 试跑时重点看这五件事
+**dsh 上要额外查的三项**（因为它们在这里是承诺不是机制）：
 
-这套设计里有五个参数是我**猜的**，只有跑起来才知道对不对。请重点观察：
+1. 对比分析专家的产出里，有没有不带 `evidence_id` 的数字 —— 它实际拿得到 web 工具
+2. 报告生成专家有没有往批次目录以外的地方写文件
+3. 质疑审查专家的模型是不是真的与刻画不同（默认**不是**）
 
-| 观察点 | 我的取值 | 怎么判断猜错了 |
-|---|---|---|
-| 返工预算 `perSubject` | 2 | 大量对象在耗尽预算后仍未解决 → 调高；几乎没用到 → 调低 |
-| `topKBuffer` | 3 | 重排后仍频繁有未证伪对象进 Top K → 调高 |
-| 单调收敛判据 | 每次返工须产新证据 | 是否出现"补证失败但其实只是慢了一步"的误判 |
-| 枚举 effort = `low` | low | 人工抽查出局池，看有无误杀 |
-| `maxParallelToolCalls` | 8 | 撞速率限制就调低 |
-
-另外看两个**结构性**问题：
-
-- **十个动作是不是真的够、有没有多**——尤其是"解读"是否真的产出了可用的启示，还是又变成了套话
-- **五条回边会不会震荡**——特别是 R2（证伪→取证）和 R3（刻画→聚合）连锁触发时
-
-## 与其他两个包的关系
+## 与其他包的关系
 
 | 包 | 用途 | 状态 |
 |---|---|---|
-| `../insight-service/` | 骨架、任务包规范、算子、校验器 | 平台无关，是正本 |
-| `../expert-team/` | 角色提示词、证据 schema、发布闸校验脚本 | 平台无关，是正本 |
-| `../expert-team-openclaw/` | OpenClaw 部署包 | **角色名尚未同步到通用骨架**，见 DSH-NOTES.md §4.2 |
-| 本包 | dsh 试跑包 | 角色名已泛化，对齐十动作骨架 |
+| [`../insight-service/`](../insight-service/) | 骨架、任务包规范、算子、校验器 | 平台无关，正本 |
+| [`../expert-team/`](../expert-team/) | **12 位专家的正本** + schema + 发布闸校验器 | 平台无关，正本 |
+| [`../expert-team-openclaw/`](../expert-team-openclaw/) | OpenClaw 部署包 | 与本包**共用同一份专家正本**，名册已对齐 |
+| 本包 | dsh 部署包 | 同上 |
 
 ## 关于本目录中的数字
 
-不含任何真实产业数据或产品数据。出现的数字只有配置参数（并发、返工预算、effort 档位）。
-真实数据只能由专家团在运行时带来源产出，经 `bin/publish-report.sh` 校验后入库。
+不含任何真实产业数据或产品数据。出现的数字只有配置参数（并发、名额上限、
+消息大小、effort 档位）。真实数据只能由专家团在运行时带来源产出，
+经 `bin/publish-report.sh` 校验后入库。

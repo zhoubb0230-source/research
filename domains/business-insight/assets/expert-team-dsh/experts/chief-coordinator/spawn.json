@@ -1,0 +1,11 @@
+{
+  "_note": "Lead 由 agent-loop 在启动时创建，不走 spawnTeammate。本文件只记录它的 provider 路由。",
+  "role": "lead",
+  "agentLoopId": "chief-coordinator",
+  "provider": "deepseek-high",
+  "nameCn": "洞察总调度",
+  "emoji": "🧭",
+  "actions": [
+    "全程"
+  ]
+}

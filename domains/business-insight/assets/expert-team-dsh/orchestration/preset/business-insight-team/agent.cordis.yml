@@ -1,0 +1,60 @@
+# ===========================================================================
+# 业务洞察专家团 · dsh preset 组合
+# ---------------------------------------------------------------------------
+# 一个 preset 是【一个目录，里面有一份 agent.cordis.yml】。
+# 本文件是一个 **plugin row 的顶层列表**（不是映射）—— 这是 preset 组合文件的形状，
+# 与 cordis.patch.yml（映射）不同，不要混。
+#
+# ⚠️ 关键事实一：队友【不各自 mount 自己的 preset】。
+#    文档原话：子代理的孩子通过 composeFrom() 加入父的常驻组合，**从不走 mount()**。
+#    所以整个专家团**共用这一份组合**：同一套工具、同一套提示词段落。
+#    逐专家的差异只能来自 spawnTeammate 的 prompt 与 provider —— 见 ../../../DSH-NOTES.md §2。
+#
+# ⚠️ 关键事实二：preset 里【不放发布服务的插件】。
+#    mount() 会拒绝往 root realm 发布服务的 row（进程级同名服务会互相撞车）。
+#    所以 fs / web / llm / skills 注册表 / agent-team 这些服务都留在宿主组合里，
+#    由 ../cordis.patch.yml 覆盖它们的配置。本文件只放【不发布服务】的东西。
+#
+# 本 preset 是**可选的**：不配 preset root 也能跑 —— 那时护栏走项目 AGENTS.md，
+# 技能走项目 .dsh/skills/。preset 的价值是让"这一队专家"可以整体搬迁、整体切换。
+#
+# 落位：把 business-insight-team/ 整个目录放进一个已配置的 preset root，
+#       或放进 <dshHome>/.agent-presets/（默认会作为 user root 追加在最后）。
+# 选用：settings 里写
+#           agent-presets:
+#             default: business-insight-team
+#
+# 上线前跑 `dsh --profile web --dump-config` 核对包名与字段。
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# 1. 部署人格 —— order 0 的 deployment:persona 段
+#    这里只放【全队共用】的东西：它对每一位专家都成立。
+#    单个专家的人格不在这里，在 spawnTeammate(prompt)。
+# ---------------------------------------------------------------------------
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    # install.py --preset 会把下面这一行整行换成一个 YAML 块标量，
+    # 内容是 ../../expert-team/experts/_shared/GUARDRAILS.md 的正文。
+    text: __GUARDRAILS_TEXT__
+    # 不要设 complete: true —— 那会把它变成唯一的提示词段落，
+    # 连 order 100–199 的工具指引段都会被压掉。
+    complete: false
+
+# ---------------------------------------------------------------------------
+# 2. preset 自带的技能目录
+#    dsh-skill-filesystem 是【提供方】，向宿主的 ctx.skills 注册，不发布服务，
+#    因此可以安全地住在 preset 里。
+#    相对路径从 preset 自己的目录解析 —— 技能随 preset 一起搬家。
+# ---------------------------------------------------------------------------
+- id: skill-filesystem-preset
+  name: '@deepseek-ai/dsh-skill-filesystem'
+  config:
+    # 与宿主那份区分开，否则两个同名 provider 会在同一层里撞车
+    providerName: business-insight-preset
+    # 只扫 preset 自带的这一份，项目级与用户级由宿主那份负责
+    includeDefaultRoots: false
+    customSkillDirs:
+      - ./skills
+    watch: true
