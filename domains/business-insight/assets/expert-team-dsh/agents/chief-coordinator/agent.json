@@ -1,0 +1,15 @@
+{
+  "agentId": "chief-coordinator",
+  "nameCn": "洞察总调度",
+  "emoji": "🧭",
+  "actions": ["全程（① 界定 → ⑩ 成文）"],
+  "model": { "reasoningEffort": "high" },
+  "userInvocable": true,
+  "canDelegate": true,
+  "optional": false,
+  "contextMode": "shared",
+  "skills": ["rework-dispatch", "challenge-typing"],
+  "extraFiles": ["playbook.md"],
+  "persona": "persona.md",
+  "note": "唯一对人暴露的入口。它是流程引擎，不是专家。"
+}

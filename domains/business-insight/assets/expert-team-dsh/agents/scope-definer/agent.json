@@ -1,0 +1,14 @@
+{
+  "agentId": "scope-definer",
+  "nameCn": "范围界定专家",
+  "emoji": "🔭",
+  "actions": ["② 枚举"],
+  "model": { "reasoningEffort": "low" },
+  "userInvocable": false,
+  "canDelegate": false,
+  "optional": false,
+  "contextMode": "isolated",
+  "skills": ["catalog-enumeration"],
+  "persona": "persona.md",
+  "note": "只管覆盖率。枚举漏掉的，后面所有环节都救不回来。"
+}

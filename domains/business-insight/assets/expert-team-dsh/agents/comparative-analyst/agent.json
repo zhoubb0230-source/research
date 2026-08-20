@@ -1,0 +1,14 @@
+{
+  "agentId": "comparative-analyst",
+  "nameCn": "对比分析专家",
+  "emoji": "📊",
+  "actions": ["⑤ 刻画", "⑥ 聚合"],
+  "model": { "reasoningEffort": "high" },
+  "userInvocable": false,
+  "canDelegate": false,
+  "optional": false,
+  "contextMode": "isolated",
+  "skills": ["dimension-scoring", "aggregation-operators"],
+  "persona": "persona.md",
+  "note": "通用维度的刻画与聚合。领域维度交给领域分析专家。"
+}

@@ -1,0 +1,14 @@
+{
+  "agentId": "domain-analyst",
+  "nameCn": "领域分析专家",
+  "emoji": "⚙️",
+  "actions": ["⑤ 刻画（领域维度）"],
+  "model": { "reasoningEffort": "high" },
+  "userInvocable": false,
+  "canDelegate": false,
+  "optional": true,
+  "contextMode": "isolated",
+  "skills": ["dimension-scoring"],
+  "persona": "persona.md",
+  "note": "可插拔。brief.domainPack 为空时不应被派发。"
+}

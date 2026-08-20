@@ -1,0 +1,14 @@
+{
+  "agentId": "fact-verifier",
+  "nameCn": "数据核证专家",
+  "emoji": "✅",
+  "actions": ["④ 核证"],
+  "model": { "reasoningEffort": "low" },
+  "userInvocable": false,
+  "canDelegate": false,
+  "optional": false,
+  "contextMode": "isolated",
+  "skills": ["source-back-verification"],
+  "persona": "persona.md",
+  "note": "硬闸门。只有它判为 verified 的证据能进入刻画。"
+}

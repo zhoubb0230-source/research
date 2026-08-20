@@ -1,0 +1,14 @@
+{
+  "agentId": "insight-planner",
+  "nameCn": "洞察规划专家",
+  "emoji": "🗺️",
+  "actions": ["① 界定（含分诊）"],
+  "model": { "reasoningEffort": "high" },
+  "userInvocable": true,
+  "canDelegate": false,
+  "optional": false,
+  "contextMode": "isolated",
+  "skills": ["insight-brief-authoring"],
+  "persona": "persona.md",
+  "note": "服务入口。先劝退，再规划。"
+}

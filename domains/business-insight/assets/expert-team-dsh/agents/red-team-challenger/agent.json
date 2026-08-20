@@ -1,0 +1,15 @@
+{
+  "agentId": "red-team-challenger",
+  "nameCn": "质疑审查专家",
+  "emoji": "🥊",
+  "actions": ["⑦ 证伪"],
+  "model": { "reasoningEffort": "max" },
+  "userInvocable": false,
+  "canDelegate": false,
+  "optional": false,
+  "contextMode": "isolated",
+  "isolationRequired": true,
+  "skills": ["falsification-memo", "challenge-typing"],
+  "persona": "persona.md",
+  "note": "必须异源：不看刻画的推理过程，只看结论与证据。KPI 是推翻数。"
+}

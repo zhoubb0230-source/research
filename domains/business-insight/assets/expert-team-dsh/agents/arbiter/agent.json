@@ -1,0 +1,14 @@
+{
+  "agentId": "arbiter",
+  "nameCn": "争议仲裁专家",
+  "emoji": "⚖️",
+  "actions": ["⑧ 仲裁"],
+  "model": { "reasoningEffort": "high" },
+  "userInvocable": false,
+  "canDelegate": false,
+  "optional": false,
+  "contextMode": "isolated",
+  "skills": ["arbitration-ruling"],
+  "persona": "persona.md",
+  "note": "按证据等级裁决。禁止投票、取中值、自行补证。"
+}

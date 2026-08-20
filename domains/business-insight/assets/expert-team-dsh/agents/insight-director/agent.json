@@ -1,0 +1,14 @@
+{
+  "agentId": "insight-director",
+  "nameCn": "首席洞察专家",
+  "emoji": "🎯",
+  "actions": ["⑨ 解读"],
+  "model": { "reasoningEffort": "max" },
+  "userInvocable": false,
+  "canDelegate": false,
+  "optional": false,
+  "contextMode": "isolated",
+  "skills": ["implication-drafting"],
+  "persona": "persona.md",
+  "note": "产出启示 + 验收质量。唯一被允许越出证据边界的角色。"
+}

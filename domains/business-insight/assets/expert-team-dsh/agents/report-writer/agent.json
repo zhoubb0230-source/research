@@ -1,0 +1,16 @@
+{
+  "agentId": "report-writer",
+  "nameCn": "报告生成专家",
+  "emoji": "📝",
+  "actions": ["⑩ 成文"],
+  "model": { "reasoningEffort": "low" },
+  "userInvocable": false,
+  "canDelegate": false,
+  "optional": false,
+  "contextMode": "isolated",
+  "sandbox": "all",
+  "toolsDeny": ["exec"],
+  "skills": ["report-rendering"],
+  "persona": "persona.md",
+  "note": "只改措辞。发布由总调度经 bin/publish_report.py 执行，它自己够不到发布目录。"
+}

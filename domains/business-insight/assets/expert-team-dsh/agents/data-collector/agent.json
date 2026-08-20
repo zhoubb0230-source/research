@@ -1,0 +1,14 @@
+{
+  "agentId": "data-collector",
+  "nameCn": "数据采集专家",
+  "emoji": "🔍",
+  "actions": ["③ 取证"],
+  "model": { "reasoningEffort": "low" },
+  "userInvocable": false,
+  "canDelegate": true,
+  "optional": false,
+  "contextMode": "isolated",
+  "skills": ["evidence-card-writing"],
+  "persona": "persona.md",
+  "note": "成本大头。产出证据卡，不产出结论。可自我分派并行取证。"
+}

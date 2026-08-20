@@ -1,0 +1,14 @@
+{
+  "agentId": "compliance-reviewer",
+  "nameCn": "合规审查专家",
+  "emoji": "🛡️",
+  "actions": ["闸门判定", "⑤ 刻画（合规维度）"],
+  "model": { "reasoningEffort": "high" },
+  "userInvocable": false,
+  "canDelegate": false,
+  "optional": true,
+  "contextMode": "isolated",
+  "skills": ["export-control-lookup"],
+  "persona": "persona.md",
+  "note": "可选角色。产业机会类洞察需要，工具类通常不需要。"
+}

@@ -54,33 +54,39 @@ dsh 的 pre-step 钩子**能**拒绝，理论上可以把数字校验挂上去�
 
 ## 4. 适配决策
 
-### 4.1 角色定义走 skills，不走配置 —— 但绑定在 spawnTeammate
+### 4.1 agent 与 skill 的边界
 
-这是本方案最重要的一个选择。理由：**skill 的格式与发现规则是文档明确的，
-而 `cordis.patch.yml` 的 verbatim 形状不是。**
+**判据是「常驻 vs 按需触发」，不是「复不复用」。**
 
-**但要分清两件事**：
+先前用"被 ≥2 个 agent 用"当 skill 的标准——那是去重判据，与 skill 的定义无关。
+官方文档说 skill 是「可扩展 agent 能力的**可选指令**」，本质属性是**可调用性**。
 
-| | 谁负责 |
-|---|---|
-| 角色定义**存在哪** | `.dsh/skills/<agentId>/SKILL.md`（项目级 100 档，优先级最高） |
-| 角色人格**怎么绑上去** | `spawnTeammate(prompt=<SKILL.md 正文>)` |
+| | 性质 | 放哪 | 例 |
+|---|---|---|---|
+| **Persona** | 常驻。从建立到销毁一直遵守 | `agents/<id>/persona.md` | 认知姿态、禁令、输入输出契约 |
+| **Skill** | 按需。遇到特定子任务才被调用 | `skills/<name>/SKILL.md` | "要记一条证据时，按这几步做" |
 
-skill 是「可被调用的资源」，不会自动让某个 agent 变成某个角色。
-只把文件放进去而不在建队友时传 `prompt`，12 个专家等于没装。
-`install.py` 额外生成 `.dsh/roster.json`，就是给总调度查路径用的。
+**两条推论：**
 
-> 若 `--dump-config` 显示 `AgentOptions` 支持 per-agent prompt，那条路比运行时传更硬
-> （配置层约束 > 运行时约束），到时候可以改。见 §5 第 2 项。
+**① 护栏必须在 persona，不能做成 skill。**
+skill 是 optional 的——模型可以不调用它。把「禁止编造数据」做成 skill，
+等于把它变成可选项。防编造是本系统全部价值的地基，必须随 `spawnTeammate` 的 prompt 绑死。
 
-这是本方案最重要的一个选择。理由：**skill 的格式与发现规则是文档明确的，
-而 `cordis.patch.yml` 的 verbatim 形状不是。**
+**② 专属 skill 完全正当。** 本交付件 13 个 skill 里 10 个只被一个 agent 用。
+`falsification-memo` 只有质疑审查专家会调，但它依然是 skill——
+因为它是"开始质疑前先写备忘录"这样一个**有明确触发时机的作业程序**，不是"我是谁"。
 
-把 12 个角色放进 `.dsh/skills/`（项目级，优先级最高的 100 档），意味着：
+### 4.1.1 agent 之间必须有互斥的认知姿态
 
-- 即使 §5 的待校验项全部要改，**角色部分照常可用**
-- 角色随项目走，不同项目可以跑不同版本的专家团
-- `install.sh` 从 `../expert-team/prompts/` 现场生成，正本只有一份，不会漂移
+多 agent 的价值来自姿态之间的**张力**。12 个都写成"严谨、有帮助的助手"，
+就是一个 agent 跑了 12 遍，只剩成本没有收益。
+
+每个 `persona.md` 的第一段是认知姿态，它们刻意互斥：
+采集**不推理** / 核证**不信任** / 分析**只在证据上推理** / 质疑**敌意** /
+仲裁**不站队** / 洞察**越界但标注** / 成文**不思考**。
+
+**自检**：把任意两个 agent 的 persona 对调，产出应该明显变差。
+对调了没影响，说明这两个没有核心差异，应该合并。
 
 ### 4.2 角色命名已泛化
 
@@ -126,7 +132,7 @@ dsh 只有 `off | low | high | max`。原设计中 medium 档的四个角色
 | # | 待校验 | 我采用的写法 | 改错了会怎样 |
 |---|---|---|---|
 | 1 | **`cordis.patch.yml` 的顶层形状** | `plugins:` → 包名 → `config:` | 整个 patch 被忽略——**不报错，只是不生效** |
-| 2 | `AgentOptions` 的完整字段 | 只填了文档明确的 `id` | 无法在配置层做 per-agent 的 model/effort 约束，只能靠 skill 文本 |
+| 2 | `AgentOptions` 的完整字段 | 只填了文档明确的 `id`；persona 走运行时 `spawnTeammate(prompt=…)` | 若它支持 per-agent prompt，改到配置层更硬（配置约束 > 运行时约束） |
 | 3 | 插件包名 | `@deepseek-ai/dsh-llm-deepseek` / `@deepseek-ai/dsh-agent-loop` | 同 1 |
 | 4 | `retryPolicy` 的字段名 | `maxRetries` | 同 1 |
 

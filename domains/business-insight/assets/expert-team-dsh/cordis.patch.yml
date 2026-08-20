@@ -1,17 +1,18 @@
 # ===========================================================================
 # 业务洞察专家团 · DeepSeek Harness 配置覆盖
 # ---------------------------------------------------------------------------
-# ⚠️ 本文件是本交付包中**唯一形状未经实机确认**的部分。
+# ⚠️ 本文件是整个交付件中**唯一形状未经实机确认**的部分。
 #
-#    官方文档明确了各插件的 config 字段（见下方注释里的来源），但没有给出
-#    cordis.patch.yml 本身的 verbatim 示例。下面的嵌套形状是按「patch 覆盖
-#    到 entry 列表」的描述推断的。
+#    官方文档明确了各插件的 config 字段（来源见下方注释），但没有给出
+#    cordis.patch.yml 本身的 verbatim 示例。下面的嵌套形状是按
+#   「patch 覆盖到 entry 列表」的描述推断的。
 #
-#    上线前必须执行，并按实际输出调整本文件：
+#    上线前必须执行，并按实际输出调整：
 #        dsh --profile web --dump-config
 #
-#    好消息：12 个角色的定义**不依赖本文件**——它们走 .dsh/skills/（发现规则
-#    与文件格式都是文档明确的）。就算本文件形状要改，角色部分照常可用。
+#    好消息：12 个专家的 persona 与 13 个 skill **不依赖本文件的形状**——
+#    persona 通过 spawnTeammate 的 prompt 传入，skill 走 dsh 的目录发现规则。
+#    就算本文件要改，专家与技能照常可用。
 # ===========================================================================
 
 plugins:
@@ -19,58 +20,60 @@ plugins:
   # -------------------------------------------------------------------------
   # LLM 提供方
   # 字段来源：docs/config-catalog.md → dsh-llm-deepseek
-  #   apiKeyEnv / baseURL / thinking / reasoningEffort / maxTokens /
-  #   defaultContextWindow / models / streamIdleTimeoutMs /
-  #   maxRequestImageBytes / retryPolicy
-  #
-  # ⚠️ reasoningEffort 合法值只有 off | low | high | max —— **没有 medium**。
-  #    原设计中 medium 档的角色（取证、核证、枚举、成文）一律落到 low。
-  #    影响见 DSH-NOTES.md §4.3。
+  # ⚠️ reasoningEffort 合法值只有 off | low | high | max —— **没有 medium**
   # -------------------------------------------------------------------------
   '@deepseek-ai/dsh-llm-deepseek':
     config:
       apiKeyEnv: DEEPSEEK_API_KEY
       thinking: enabled
-      # 全局默认档。逐角色的建议档位写在各自的 SKILL.md 里；
-      # 若你的 dsh 版本支持 agents[] 级别覆盖 effort，优先在那里设。
-      reasoningEffort: high
+      reasoningEffort: high        # 全局默认；逐专家的建议档见各 agent.json
       retryPolicy:
-        # 取证阶段并发高，留足重试
-        maxRetries: 3
+        maxRetries: 3              # 取证阶段并发高，留足重试
 
   # -------------------------------------------------------------------------
-  # Agent 循环 —— 声明 12 个角色的 agent id
+  # Skill 发现
+  # 字段来源：docs/config-catalog.md → skills.load.extraDirs
+  #
+  # 用 extraDirs 直接指向本交付件的 skills/ 目录，**不必复制**，
+  # 仓库更新后自动同步。若你更希望走项目级 .dsh/skills（排名 100，优先级更高），
+  # 见 INSTALL.md 的「方式二」。
+  # -------------------------------------------------------------------------
+  skills:
+    config:
+      load:
+        extraDirs:
+          - '<REPO>/domains/business-insight/assets/expert-team-dsh/skills'
+
+  # -------------------------------------------------------------------------
+  # Agent 循环 —— 声明 12 个专家的 agent id
   # 字段来源：docs/config-catalog.md → dsh-agent-loop
   #   { maxParallelToolCalls?, agents: (AgentOptions & { id, sessionId?, cwd?, resumeSessionId? })[] }
   #
-  # ⚠️ AgentOptions 的完整字段本包未确认。这里只填文档中明确列出的 id / cwd。
-  #    若你的版本支持 per-agent model / effort / prompt，用 --dump-config 看到
-  #    真实字段后补进来，会比现在只靠 skill 文本约束更硬。
+  # ⚠️ AgentOptions 的完整字段未确认，这里只填文档明确列出的 id。
+  #    persona 通过 spawnTeammate(prompt=...) 在运行时绑定（见各 agent 的 persona.md）。
+  #    若 --dump-config 显示支持 per-agent prompt/model/effort，改到这里更硬。
   # -------------------------------------------------------------------------
   '@deepseek-ai/dsh-agent-loop':
     config:
-      # 取证阶段是并发大头，按你的速率限制回调
-      maxParallelToolCalls: 8
+      maxParallelToolCalls: 8      # 取证是并发大头，按你的速率限制回调
       agents:
-        - id: chief-coordinator      # 🧭 洞察总调度      全程
-        - id: insight-planner        # 🗺️ 洞察规划专家    ① 界定（含分诊）
-        - id: scope-definer          # 🔭 范围界定专家    ② 枚举
-        - id: data-collector         # 🔍 数据采集专家    ③ 取证
-        - id: fact-verifier          # ✅ 数据核证专家    ④ 核证
-        - id: comparative-analyst    # 📊 对比分析专家    ⑤ 刻画 ⑥ 聚合
-        - id: domain-analyst         # ⚙️ 领域分析专家    ⑤ 刻画（领域维度，可选）
-        - id: compliance-reviewer    # 🛡️ 合规审查专家    闸门 + 合规维度（可选）
-        - id: red-team-challenger    # 🥊 质疑审查专家    ⑦ 证伪
-        - id: arbiter                # ⚖️ 争议仲裁专家    ⑧ 仲裁
-        - id: insight-director       # 🎯 首席洞察专家    ⑨ 解读
-        - id: report-writer          # 📝 报告生成专家    ⑩ 成文
+        - id: chief-coordinator      # 🧭 洞察总调度      全程        effort high
+        - id: insight-planner        # 🗺️ 洞察规划专家    ① 界定      effort high
+        - id: scope-definer          # 🔭 范围界定专家    ② 枚举      effort low
+        - id: data-collector         # 🔍 数据采集专家    ③ 取证      effort low
+        - id: fact-verifier          # ✅ 数据核证专家    ④ 核证      effort low
+        - id: comparative-analyst    # 📊 对比分析专家    ⑤⑥         effort high
+        - id: domain-analyst         # ⚙️ 领域分析专家    ⑤（可选）   effort high
+        - id: compliance-reviewer    # 🛡️ 合规审查专家    闸门（可选）effort high
+        - id: red-team-challenger    # 🥊 质疑审查专家    ⑦ 证伪      effort max
+        - id: arbiter                # ⚖️ 争议仲裁专家    ⑧ 仲裁      effort high
+        - id: insight-director       # 🎯 首席洞察专家    ⑨ 解读      effort max
+        - id: report-writer          # 📝 报告生成专家    ⑩ 成文      effort low
 
 # ---------------------------------------------------------------------------
 # 刻意不在这里配置的东西
 # ---------------------------------------------------------------------------
-# · 角色提示词      → .dsh/skills/<agentId>/SKILL.md，由 install.sh 生成
-# · 判据与口径      → 每批次的 brief.json，不进平台配置
-# · 发布闸          → bin/publish-report.sh，是脚本不是配置（见 DSH-NOTES.md §3）
-# · 外部 harness    → 如需把 Claude Code / Codex 接进来做子代理，用
-#                     @deepseek-ai/dsh-subagent-acp（config: providerName /
-#                     command / args / cwd / permission / env）。本方案不需要。
+# · 专家人格   → agents/<id>/persona.md，运行时由 spawnTeammate 的 prompt 传入
+# · 作业方法   → skills/<name>/SKILL.md，由 dsh 的 skill 注册表按需调用
+# · 判据与口径 → 每批次的 brief.json，不进平台配置
+# · 发布闸     → bin/publish_report.py，是脚本不是配置（见 DSH-NOTES.md §3）
