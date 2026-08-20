@@ -23,11 +23,11 @@
 
 | 文件 | 内容 |
 |---|---|
-| `spine.md` | **先读这个。** 九动作骨架、哪些动作可退化哪些永不退化、闸门时机、对抗与仲裁的固定规则 |
+| `spine.md` | **先读这个。** 十动作骨架、退化规则、分诊、闸门时机、**回环模型**、解读、基线快照 |
 | `schemas/brief.schema.json` | 任务包的完整字段定义（8 组参数） |
-| `aggregators.md` | 六个聚合算子的契约、适用场景与典型误用 |
+| `aggregators.md` | 五个聚合算子的契约、适用场景与典型误用 |
 | `presets/` | 预设样例。**照着改是最有效的用法** |
-| `checks/validate_brief.py` | 任务包校验：字段形态 + 跨字段一致性 |
+| `checks/validate_brief.py` | 任务包校验：字段形态 + 跨字段一致性 + 返工预算与解读配置 |
 
 ## 与 `../expert-team/` 的关系
 
@@ -70,6 +70,28 @@ pip install jsonschema   # 可选
 ```bash
 python3 checks/validate_brief.py checks/fixtures/broken.brief.json   # 期望 exit 1，报出十余项错误
 ```
+
+## 回环：证伪发现问题之后
+
+骨架不是线性的。质疑审查专家报出问题后，**质疑类型决定返工回到哪一步**：
+
+| 质疑类型 | 回到 |
+|---|---|
+| `evidence_missing` / `evidence_weak` / `source_grade_too_low` / `stale_data` | ③ 取证 |
+| `confirmation_bias` | ③ 取证 —— **补的是反向证据** |
+| `scope_mismatch` | ④ 核证 → ⑤ 刻画 |
+| `anchor_misapplied` | ⑤ 刻画 |
+| `counterexample` / `causal_overreach` | ⑧ 仲裁（判断问题，补证解决不了） |
+| `definition_drift` | ① 界定（**须人工**，唯一能改 brief 的路径） |
+
+三条约束保证它收敛（详见 `spine.md` §4）：
+
+1. **只回不进**：补了证据不能直接改分，必须重走 核证 → 刻画 → 聚合。否则新证据绕过核证进入评分。
+2. **单调收敛**：每次返工必须产出新的 `evidence_id`，否则判该质疑成立，不再重试。
+3. **全局重算**：任一对象刻画 `revision` 变更 ⇒ 聚合标记 `stale` ⇒ 全量重排；
+   证伪阶段做 Top K+3 缓冲带，避免重排后新进 Top K 的对象未经证伪。
+
+预算在 `rework` 字段里配（`perSubject` / `globalShare` / `requireNewEvidence` / `topKBuffer`）。
 
 ## 三条最容易写错的地方
 

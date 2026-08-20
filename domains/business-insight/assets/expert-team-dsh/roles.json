@@ -1,0 +1,146 @@
+{
+  "_comment": "业务洞察专家团 · DeepSeek Harness 角色定义。install.sh 读取本文件，把 ../expert-team/prompts/ 的角色提示词生成为 dsh skills。本文件只描述装配元数据，不复制提示词正文。",
+  "_promptDir": "../expert-team/prompts",
+  "_sharedGuardrails": "_shared-guardrails.md",
+  "_spine": "../insight-service/spine.md",
+  "_effortNote": "dsh 的 reasoningEffort 只有 off|low|high|max，没有 medium。原设计中的 medium 角色一律落到 low，精度损失见 DSH-NOTES.md §4.3。",
+
+  "roles": [
+    {
+      "agentId": "chief-coordinator", "nameCn": "洞察总调度", "emoji": "🧭",
+      "actions": ["全程"], "promptFile": "00-orchestrator.md",
+      "reasoningEffort": "high", "canDelegate": true,
+      "playbook": "playbook.md",
+      "userInvocable": true,
+      "note": "唯一对人暴露的入口。推进十动作状态机与五条回边，不做内容判断。"
+    },
+    {
+      "agentId": "insight-planner", "nameCn": "洞察规划专家", "emoji": "🗺️",
+      "actions": ["① 界定（含分诊）"], "promptFile": "01-rubric-owner.md",
+      "reasoningEffort": "high", "canDelegate": false,
+      "userInvocable": true,
+      "note": "服务入口。先分诊（是不是洞察需求），再把需求翻译成任务包 brief.json。",
+      "extraContract": [
+        "分诊有终止出口：判为检索需求则直接拒绝并给替代路径，不启动专家团",
+        "产出必须通过 insight-service/checks/validate_brief.py",
+        "冻结 brief 须人工签署，你不得自行置为 frozen"
+      ]
+    },
+    {
+      "agentId": "scope-definer", "nameCn": "范围界定专家", "emoji": "🔭",
+      "actions": ["② 枚举"], "promptFile": "02-opportunity-scanner.md",
+      "reasoningEffort": "low", "canDelegate": false,
+      "note": "按 brief.subject 穷举对象集合。只管覆盖率，不做价值判断。",
+      "extraContract": [
+        "对象单位由 brief.subject.unit 决定，可能是机会、厂商、产品、路线、事件或假说",
+        "每个对象必须可回溯到 enumerated_from"
+      ]
+    },
+    {
+      "agentId": "data-collector", "nameCn": "数据采集专家", "emoji": "🔍",
+      "actions": ["③ 取证"], "promptFile": "03-evidence-collector.md",
+      "reasoningEffort": "low", "canDelegate": true,
+      "note": "成本大头。产出证据卡，不产出结论。可自我分派并行取证。",
+      "extraContract": [
+        "证据等级的实例清单来自 brief.evidencePolicy.grades，不同任务包不同",
+        "超过 brief.evidencePolicy.maxAgeMonths 的证据必须标记超龄",
+        "brief.evidencePolicy.directVerification.available 为真时，优先做直接验证（跑一下/读源码/调 API）",
+        "取证中发现枚举未覆盖的对象 → 触发回边 R1，报给总调度，不要自行并入"
+      ]
+    },
+    {
+      "agentId": "fact-verifier", "nameCn": "数据核证专家", "emoji": "✅",
+      "actions": ["④ 核证"], "promptFile": "07-fact-checker.md",
+      "reasoningEffort": "low", "canDelegate": false,
+      "note": "硬闸门。只有判为 verified 的证据能进入刻画。",
+      "extraContract": [
+        "返工路径上的新证据同样必须经你核证——回环只回不进，没有旁路"
+      ]
+    },
+    {
+      "agentId": "comparative-analyst", "nameCn": "对比分析专家", "emoji": "📊",
+      "actions": ["⑤ 刻画", "⑥ 聚合"], "promptFile": "04-industry-analyst.md",
+      "reasoningEffort": "high", "canDelegate": false,
+      "note": "按 brief.criteria.dimensions 逐对象逐维度赋值，再按 brief.aggregation 的算子折叠。",
+      "extraContract": [
+        "维度有四种类型：ordinal 打分、categorical 取值域、factual 事实、temporal 时序，处理方式不同",
+        "算子有五个：rank / matrix / cluster / verdict / trend，契约见 insight-service/aggregators.md",
+        "刻画结果必须带 revision；任一 revision 变更即触发回边 R3 全局重算",
+        "重算前的旧聚合结果不得用于任何下游动作"
+      ]
+    },
+    {
+      "agentId": "domain-analyst", "nameCn": "领域分析专家", "emoji": "⚙️",
+      "actions": ["⑤ 刻画（领域维度）"], "promptFile": "05-techchain-analyst.md",
+      "reasoningEffort": "high", "canDelegate": false,
+      "optional": true,
+      "note": "可插拔。只处理 ownerRole=domain-analyst 的维度，领域知识由 brief.domainPack 注入。",
+      "extraContract": [
+        "brief.domainPack 为空时你不应被派发——没有领域知识可用",
+        "domainPack.lastReviewed 过期时须在产出中标记"
+      ]
+    },
+    {
+      "agentId": "compliance-reviewer", "nameCn": "合规审查专家", "emoji": "🛡️",
+      "actions": ["闸门判定", "⑤ 刻画（合规维度）"], "promptFile": "08-compliance-officer.md",
+      "reasoningEffort": "high", "canDelegate": false,
+      "optional": true,
+      "note": "可选角色。产业机会类洞察需要，工具类洞察通常不需要。",
+      "extraContract": [
+        "判定必须回原文并给条目定位，禁止凭记忆",
+        "三态输出；undetermined 不得被当作合规通过"
+      ]
+    },
+    {
+      "agentId": "red-team-challenger", "nameCn": "质疑审查专家", "emoji": "🥊",
+      "actions": ["⑦ 证伪"], "promptFile": "06-red-team.md",
+      "reasoningEffort": "max", "canDelegate": false,
+      "isolationRequired": true,
+      "note": "必须异源：不看刻画的推理过程，只看结论与证据。KPI 是推翻/降级数。",
+      "extraContract": [
+        "先写证伪备忘录（三条最可能致命的假设），再逐条质疑",
+        "**质疑类型决定返工回到哪一步**，必须准确归类——它是回边 R2 的路由键",
+        "evidence_missing / evidence_weak / source_grade_too_low / stale_data → 回取证",
+        "confirmation_bias → 回取证，但要求补的是**反向证据**",
+        "scope_mismatch → 回核证再回刻画；anchor_misapplied → 回刻画",
+        "counterexample / causal_overreach → 直接进仲裁，补证解决不了",
+        "definition_drift → 升级为口径异议，须人工，唯一能改 brief 的路径",
+        "最多 2 轮；第 2 轮只能针对第 1 轮应答中的新证据"
+      ]
+    },
+    {
+      "agentId": "arbiter", "nameCn": "争议仲裁专家", "emoji": "⚖️",
+      "actions": ["⑧ 仲裁"], "promptFile": "09-arbiter.md",
+      "reasoningEffort": "high", "canDelegate": false,
+      "note": "按证据等级裁决。禁止投票、禁止取中值、禁止自行补证。",
+      "extraContract": [
+        "返工预算耗尽而送来的质疑，按保守优先处置",
+        "一轮返工后证据库无新增 evidence_id = 补证失败，该质疑直接成立"
+      ]
+    },
+    {
+      "agentId": "insight-director", "nameCn": "首席洞察专家", "emoji": "🎯",
+      "actions": ["⑨ 解读"], "promptFile": "10-chief-insight-officer.md",
+      "reasoningEffort": "max", "canDelegate": false,
+      "note": "产出启示（可直接借鉴 / 需验证再决策 / 明确不做），并验收产出质量。",
+      "extraContract": [
+        "我方处境来自 brief.interpretation.ourContext，不在证据库里",
+        "每条启示标【判断】并回指依赖的已仲裁发现",
+        "禁止引入新的事实性数字；禁止解读未经仲裁的结论",
+        "「明确不做」不可省略"
+      ]
+    },
+    {
+      "agentId": "report-writer", "nameCn": "报告生成专家", "emoji": "📝",
+      "actions": ["⑩ 成文"], "promptFile": "11-report-renderer.md",
+      "reasoningEffort": "low", "canDelegate": false,
+      "note": "只做措辞改写。发布必须经 bin/publish-report.sh；同时产出结构化基线快照。",
+      "extraContract": [
+        "禁止引入新数字、新实体、新因果断言；禁止删除不确定性标注",
+        "报告首屏必须呈现 brief.degradations 中的每一项退化",
+        "除报告外还要产出 baseline.json（含 briefId + briefVersion + asOf + 逐对象终值 + evidenceIndex）",
+        "校验不过时的正确处置是回上游补证，不是改措辞绕过"
+      ]
+    }
+  ]
+}

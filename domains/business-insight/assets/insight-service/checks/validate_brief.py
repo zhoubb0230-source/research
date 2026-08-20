@@ -86,6 +86,11 @@ def cross_field_check(b: dict, r: Result) -> None:
                 r.err("AGG-RANK-3", f"ordinal 维度 weight 之和为 {sum(weights)}，应为 100")
             if not cfg.get("confidenceLayering", True):
                 r.warn("AGG-RANK-4", "关闭了置信度分层。高分+低置信度最可能是「缺失数据被乐观填充」，不建议关闭")
+            topk = (b.get("subject", {}).get("cardinality") or {}).get("topK")
+            buf = (b.get("rework") or {}).get("topKBuffer", 3)
+            if topk and buf == 0:
+                r.warn("AGG-RANK-5",
+                       "rank + topK 但 topKBuffer=0。返工触发重排后，新进 Top K 的对象未经证伪，会引出二次回环")
 
         elif op == "cluster":
             by = cfg.get("byDimension")
@@ -104,11 +109,16 @@ def cross_field_check(b: dict, r: Result) -> None:
             if cfg.get("emptyCellPolicy") not in (None, "must-mark-unknown"):
                 r.warn("AGG-MATRIX-2", "矩阵空白单元会被读者默认理解为「否」，建议 emptyCellPolicy=must-mark-unknown")
 
-        elif op == "diff":
-            if src_type != "baseline":
-                r.err("AGG-DIFF-1", f"算子 diff 要求 subject.source.type=baseline，当前为 {src_type}")
-            if not (cfg.get("baselineRef") or src.get("baselineRef")):
-                r.err("AGG-DIFF-2", "算子 diff 必须给出 baselineRef")
+        elif op == "trend":
+            temporals = [d for d in dims.values() if d.get("type") == "temporal"]
+            baselines = cfg.get("baselines") or ([src["baselineRef"]] if src.get("baselineRef") else [])
+            if not temporals and len(baselines) < 2:
+                r.err("AGG-TREND-1",
+                      "算子 trend 需要 ≥1 个 temporal 维度，或 config.baselines 中 ≥2 个基线快照")
+            if len(baselines) == 2:
+                r.warn("AGG-TREND-2", "只有两个时点。两点只能说变化，说不了趋势——方向判断须标注为判断")
+            if baselines and not src.get("baselineRef") and src_type != "baseline":
+                r.warn("AGG-TREND-3", f"给了基线但 source.type={src_type}，确认对象集合是否应来自基线")
 
         elif op == "rank_hypotheses":
             if src_type != "hypothesis_generation":
@@ -169,6 +179,36 @@ def cross_field_check(b: dict, r: Result) -> None:
     dq = b.get("decisionQuestion", "")
     if dq and not any(k in dq for k in ("？", "?", "是否", "该", "哪", "应")):
         r.warn("DQ-1", "decisionQuestion 读起来不像一个决策问题。答不上「这支持什么决策」的多半是检索需求，应在分诊环节拦下")
+
+    # ---- 返工预算（回环约束，见 spine.md §4.4） ----
+    rw = b.get("rework") or {}
+    if not rw:
+        r.warn("RW-0", "未声明 rework 预算，将使用默认值（perSubject=2, globalShare=0.2, topKBuffer=3）")
+    if rw.get("requireNewEvidence") is False:
+        r.err("RW-1",
+              "requireNewEvidence=false 会让返工可能空转——采集专家会反复去同一个查不到的地方查，"
+              "直到预算耗尽。这是单调收敛的唯一保障，不应关闭")
+    if rw.get("perSubject", 2) > 3:
+        r.warn("RW-2", f"perSubject={rw.get('perSubject')} 偏高。返工成本按对象数放大，建议 ≤3")
+    if rw.get("globalShare", 0.2) > 0.4:
+        r.warn("RW-3", f"globalShare={rw.get('globalShare')} 偏高，返工可能吃掉主流程预算")
+
+    # ---- 解读（见 spine.md §5） ----
+    interp = b.get("interpretation") or {}
+    if not interp:
+        r.warn("INT-0", "未声明 interpretation。解读需要「我方处境」，缺了它只能泛泛而谈")
+    elif not interp.get("ourContext"):
+        r.warn("INT-1",
+               "interpretation.ourContext 为空。我方能力/约束/战略不在证据库里，"
+               "不提供的话解读产不出「可直接借鉴 / 明确不做」这类可执行结论")
+    cats = interp.get("requiredCategories")
+    if cats is not None and "do_not_pursue" not in cats:
+        r.warn("INT-2", "requiredCategories 未包含 do_not_pursue。「明确不做」最容易被略过，也最有价值")
+
+    # ---- 基线产出 ----
+    if any(a.get("operator") == "trend" for a in b.get("aggregation", [])) \
+            and not (b.get("output") or {}).get("baselineTo"):
+        r.warn("BL-1", "使用了 trend 算子但未设 output.baselineTo，本轮不会产出可供下轮比对的基线快照")
 
     # ---- 其他 ----
     topk = (b.get("subject", {}).get("cardinality") or {}).get("topK")

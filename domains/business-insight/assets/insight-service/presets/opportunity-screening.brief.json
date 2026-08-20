@@ -5,9 +5,7 @@
   "title": "半导体装备技术链邻接的新业务机会筛选",
   "createdBy": "业务侧",
   "createdAt": "2026-08-19",
-
   "decisionQuestion": "在与我方半导体装备技术链邻接的领域中，未来 3 年应优先投入哪 5–8 个新业务方向？",
-
   "subject": {
     "unit": "业务机会（落到设备/子系统/部件层，不是行业层）",
     "boundary": {
@@ -27,22 +25,56 @@
     "source": {
       "type": "catalog_enumeration",
       "catalogs": [
-        { "name": "国民经济行业分类国家标准", "locatorHint": "大类/中类/小类编码", "grade": "A" },
-        { "name": "战略性新兴产业分类", "locatorHint": "条目编码", "grade": "A" },
-        { "name": "五年规划纲要及专项规划文本", "locatorHint": "章节", "grade": "A" },
-        { "name": "单体设备攻关 / 首台套类目录", "locatorHint": "条目号", "grade": "A" },
-        { "name": "各行业协会的设备目录与产品分类", "locatorHint": "目录条目", "grade": "B" },
-        { "name": "海关税则机电类章节", "locatorHint": "税则号列", "grade": "A" },
-        { "name": "在位厂商产品线目录", "locatorHint": "产品页", "grade": "B" }
+        {
+          "name": "国民经济行业分类国家标准",
+          "locatorHint": "大类/中类/小类编码",
+          "grade": "A"
+        },
+        {
+          "name": "战略性新兴产业分类",
+          "locatorHint": "条目编码",
+          "grade": "A"
+        },
+        {
+          "name": "五年规划纲要及专项规划文本",
+          "locatorHint": "章节",
+          "grade": "A"
+        },
+        {
+          "name": "单体设备攻关 / 首台套类目录",
+          "locatorHint": "条目号",
+          "grade": "A"
+        },
+        {
+          "name": "各行业协会的设备目录与产品分类",
+          "locatorHint": "目录条目",
+          "grade": "B"
+        },
+        {
+          "name": "海关税则机电类章节",
+          "locatorHint": "税则号列",
+          "grade": "A"
+        },
+        {
+          "name": "在位厂商产品线目录",
+          "locatorHint": "产品页",
+          "grade": "B"
+        }
       ]
     },
-    "cardinality": { "expected": 250, "topK": 6 }
+    "cardinality": {
+      "expected": 250,
+      "topK": 6
+    }
   },
-
   "criteria": {
     "dimensions": [
       {
-        "id": "A", "name": "技术链重合度", "type": "ordinal", "weight": 25, "ownerRole": "domain-analyst",
+        "id": "A",
+        "name": "技术链重合度",
+        "type": "ordinal",
+        "weight": 25,
+        "ownerRole": "domain-analyst",
         "anchors": {
           "10": "≥6 项子能力直接复用，且核心技术难点正落在我方现有强项上",
           "8": "4–5 项子能力直接复用",
@@ -54,7 +86,10 @@
         "note": "必须逐子能力项判定，禁止整体印象分。子能力项清单见 domainPack"
       },
       {
-        "id": "B", "name": "客户结构与直销适配", "type": "ordinal", "weight": 18,
+        "id": "B",
+        "name": "客户结构与直销适配",
+        "type": "ordinal",
+        "weight": 18,
         "anchors": {
           "10": "全球目标客户 <30 家；Top10 占行业设备采购 >60%；可直接触达技术决策人",
           "8": "客户 <100 家；Top10 >40%；直销可覆盖",
@@ -66,7 +101,10 @@
         "note": "评的是「设备采购方」的集中度，不是终端行业的集中度"
       },
       {
-        "id": "C", "name": "市场规模、增长与盈利结构", "type": "ordinal", "weight": 20,
+        "id": "C",
+        "name": "市场规模、增长与盈利结构",
+        "type": "ordinal",
+        "weight": 20,
         "anchors": {
           "10": "设备市场 ≥200 亿 且 CAGR ≥20% 且 在位头部毛利 ≥55%",
           "8": "设备市场 ≥100 亿 且 CAGR ≥15% 且 在位头部毛利 ≥50%",
@@ -78,7 +116,10 @@
         "note": "毛利指标看的是「在位头部玩家的毛利率」，不是我方目标毛利。本维度 NA 率最高——设备级细分市场规模在官方统计中通常查不到，取不到就记 NA，禁止用行业规模乘比例推算"
       },
       {
-        "id": "D", "name": "竞争格局", "type": "ordinal", "weight": 15,
+        "id": "D",
+        "name": "竞争格局",
+        "type": "ordinal",
+        "weight": 15,
         "anchors": {
           "10": "供应商 3–8 家；CR2 <60%；且主要在位者受对华出口管制",
           "8": "供应商 3–10 家；CR3 <70%",
@@ -90,7 +131,11 @@
         "note": "「两强」不是恒定负分。两强不受管制 = 最差；两强均受对华管制 = 最好。管制带来的加成由修正项 i 给出，本维度不重复计算"
       },
       {
-        "id": "E", "name": "政策与战略契合", "type": "ordinal", "weight": 12, "ownerRole": "compliance",
+        "id": "E",
+        "name": "政策与战略契合",
+        "type": "ordinal",
+        "weight": 12,
+        "ownerRole": "compliance",
         "anchors": {
           "10": "同时命中新兴产业目录与单体设备攻关/首台套类目录，且无被指定独家承担的国家队",
           "8": "命中其一，且有明确专项支持",
@@ -102,7 +147,11 @@
         "note": "若已有政策指定的独家承担主体，扣 3 分。判定必须回原文并给条目定位"
       },
       {
-        "id": "F", "name": "技术窗口与国产化缺口", "type": "ordinal", "weight": 10, "ownerRole": "domain-analyst",
+        "id": "F",
+        "name": "技术窗口与国产化缺口",
+        "type": "ordinal",
+        "weight": 10,
+        "ownerRole": "domain-analyst",
         "anchors": {
           "10": "TRL 6–8 且 国产化率 <10% 且 突破周期 3–5 年",
           "8": "TRL 6–8 且 国产化率 <30% 且 突破周期 2–5 年",
@@ -115,64 +164,194 @@
       }
     ],
     "gates": [
-      { "id": "G-4", "name": "法律与合规红线", "rule": "军品、受限终端用途、明令禁止或淘汰类产业", "action": "reject", "evaluateAfter": "enumerate" },
-      { "id": "G-5", "name": "红海排除", "rule": "全球有效供应商 >20 家 且 头部毛利 <30%", "action": "reject", "evaluateAfter": "enumerate" },
-      { "id": "G-2", "name": "技术成熟度", "rule": "TRL <5（概念/实验室原型阶段）", "action": "reject", "evaluateAfter": "enumerate" },
-      { "id": "G-3", "name": "我方可造性", "rule": "核心部件或材料受进口管制 且 无国内替代 且 无自研路径", "action": "reject", "evaluateAfter": "enumerate", "note": "管制判定必须回原文；undetermined 不得视为 not_restricted" },
-      { "id": "G-1", "name": "能力可迁移性", "rule": "维度 A 得分 <4", "action": "reject", "evaluateAfter": "characterize", "dependsOn": ["A"] },
-      { "id": "G-6", "name": "数据可得性", "rule": "维度 A/C/D 的核心指标全部为 NA", "action": "defer", "evaluateAfter": "characterize", "dependsOn": ["A", "C", "D"], "note": "不是 reject。数据缺失是我们的信息问题，不是机会的质量问题" }
+      {
+        "id": "G-4",
+        "name": "法律与合规红线",
+        "rule": "军品、受限终端用途、明令禁止或淘汰类产业",
+        "action": "reject",
+        "evaluateAfter": "enumerate"
+      },
+      {
+        "id": "G-5",
+        "name": "红海排除",
+        "rule": "全球有效供应商 >20 家 且 头部毛利 <30%",
+        "action": "reject",
+        "evaluateAfter": "enumerate"
+      },
+      {
+        "id": "G-2",
+        "name": "技术成熟度",
+        "rule": "TRL <5（概念/实验室原型阶段）",
+        "action": "reject",
+        "evaluateAfter": "enumerate"
+      },
+      {
+        "id": "G-3",
+        "name": "我方可造性",
+        "rule": "核心部件或材料受进口管制 且 无国内替代 且 无自研路径",
+        "action": "reject",
+        "evaluateAfter": "enumerate",
+        "note": "管制判定必须回原文；undetermined 不得视为 not_restricted"
+      },
+      {
+        "id": "G-1",
+        "name": "能力可迁移性",
+        "rule": "维度 A 得分 <4",
+        "action": "reject",
+        "evaluateAfter": "characterize",
+        "dependsOn": [
+          "A"
+        ]
+      },
+      {
+        "id": "G-6",
+        "name": "数据可得性",
+        "rule": "维度 A/C/D 的核心指标全部为 NA",
+        "action": "defer",
+        "evaluateAfter": "characterize",
+        "dependsOn": [
+          "A",
+          "C",
+          "D"
+        ],
+        "note": "不是 reject。数据缺失是我们的信息问题，不是机会的质量问题"
+      }
     ]
   },
-
   "aggregation": [
     {
       "operator": "rank",
       "config": {
         "adjustments": [
-          { "id": "g", "name": "进入路径可得性", "range": [-10, 10], "ownerRole": "analyst",
-            "anchors": { "10": "有可并购标的 且 有灯塔客户联合开发意向", "5": "具备其一", "0": "无现成路径但可自建", "-5": "关键人才或核心供应链不可得", "-10": "存在专利封锁或必要资质不可得" } },
-          { "id": "h", "name": "验证成本与周期", "range": [-10, 10], "ownerRole": "domain-analyst",
-            "anchors": { "5": "首台套验证 <12 个月，NRE 在常规量级", "0": "12–24 个月", "-5": "24–36 个月", "-10": ">36 个月或需客户产线长期停机配合" } },
-          { "id": "i", "name": "管制不对称性", "range": [-10, 10], "ownerRole": "compliance",
-            "note": "双向判定后求和：向内（在位者受限=我方机会，0~+10）+ 向外（我方受限=天花板，-10~0）。三态输出，undetermined 触发置信度降为 low" }
+          {
+            "id": "g",
+            "name": "进入路径可得性",
+            "range": [
+              -10,
+              10
+            ],
+            "ownerRole": "analyst",
+            "anchors": {
+              "10": "有可并购标的 且 有灯塔客户联合开发意向",
+              "5": "具备其一",
+              "0": "无现成路径但可自建",
+              "-5": "关键人才或核心供应链不可得",
+              "-10": "存在专利封锁或必要资质不可得"
+            }
+          },
+          {
+            "id": "h",
+            "name": "验证成本与周期",
+            "range": [
+              -10,
+              10
+            ],
+            "ownerRole": "domain-analyst",
+            "anchors": {
+              "5": "首台套验证 <12 个月，NRE 在常规量级",
+              "0": "12–24 个月",
+              "-5": "24–36 个月",
+              "-10": ">36 个月或需客户产线长期停机配合"
+            }
+          },
+          {
+            "id": "i",
+            "name": "管制不对称性",
+            "range": [
+              -10,
+              10
+            ],
+            "ownerRole": "compliance",
+            "note": "双向判定后求和：向内（在位者受限=我方机会，0~+10）+ 向外（我方受限=天花板，-10~0）。三态输出，undetermined 触发置信度降为 low"
+          }
         ],
         "confidenceLayering": true,
         "lowConfidenceBlocksDeepDive": true
       }
     }
   ],
-
   "evidencePolicy": {
     "grades": {
-      "A": ["官方统计与统计年鉴", "海关进出口数据", "上市公司年报与分部披露", "招股说明书", "政府规划与目录文件", "官方专利数据库"],
-      "B": ["行业协会公开统计", "标准组织材料", "权威行业年鉴"],
-      "C": ["券商研究报告", "第三方咨询机构报告"],
-      "D": ["媒体报道", "厂商宣传材料", "社区讨论"]
+      "A": [
+        "官方统计与统计年鉴",
+        "海关进出口数据",
+        "上市公司年报与分部披露",
+        "招股说明书",
+        "政府规划与目录文件",
+        "官方专利数据库"
+      ],
+      "B": [
+        "行业协会公开统计",
+        "标准组织材料",
+        "权威行业年鉴"
+      ],
+      "C": [
+        "券商研究报告",
+        "第三方咨询机构报告"
+      ],
+      "D": [
+        "媒体报道",
+        "厂商宣传材料",
+        "社区讨论"
+      ]
     },
     "minGrade": "B",
     "maxAgeMonths": 24,
-    "directVerification": { "available": false, "methods": [], "required": false },
+    "directVerification": {
+      "available": false,
+      "methods": [],
+      "required": false
+    },
     "crossCheckRequired": true
   },
-
+  "rework": {
+    "perSubject": 2,
+    "globalShare": 0.2,
+    "requireNewEvidence": true,
+    "topKBuffer": 3
+  },
+  "interpretation": {
+    "ourContext": [
+      "我方现有半导体装备产品线与可复用的工艺能力",
+      "可承受的首台套验证周期与 NRE 投入上限",
+      "现有客户关系可直接触达的行业",
+      "未来三年的战略投入方向与不做清单",
+      "供应链上已掌握与仍受制于人的关键环节"
+    ],
+    "requiredCategories": [
+      "can_adopt",
+      "verify_first",
+      "do_not_pursue"
+    ]
+  },
   "temporal": {
     "asOf": "2026-08",
     "lookbackMonths": 36,
     "horizonMonths": 36,
     "reportValidityMonths": 12
   },
-
   "output": {
     "template": "domains/business-insight/assets/expert-team/templates/longlist.md",
     "audience": "战略与业务决策层",
     "depth": "full",
-    "archiveTo": "domains/business-insight/insights/"
+    "archiveTo": "domains/business-insight/insights/",
+    "baselineTo": "domains/business-insight/assets/baselines/opportunity-screening/"
   },
-
   "domainPack": {
     "ref": "semiconductor-equipment-v1",
-    "glossary": ["TRL", "首台套", "国产化率", "CR3/CR5", "NRE", "分部披露"],
-    "sources": ["中国电子专用设备工业协会", "相关装备行业协会", "上市公司分部披露"],
+    "glossary": [
+      "TRL",
+      "首台套",
+      "国产化率",
+      "CR3/CR5",
+      "NRE",
+      "分部披露"
+    ],
+    "sources": [
+      "中国电子专用设备工业协会",
+      "相关装备行业协会",
+      "上市公司分部披露"
+    ],
     "pitfalls": [
       "全球口径与中国大陆口径混用",
       "终端行业规模与设备市场规模混用",
@@ -182,8 +361,6 @@
     ],
     "lastReviewed": "2026-08-19"
   },
-
   "degradations": [],
-
   "notes": "本任务包是原始「经纬线 a–f」需求的结构化表达。a→A、b→B、c→C、d→D、e→E、f→F；新增 g/h/i 三个修正项回答「我们能不能进得去」。完整方法学说明见 domains/business-insight/solutions/2026-08-19-opportunity-screening-rubric.md"
 }

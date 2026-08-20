@@ -2,40 +2,118 @@
   "briefId": "BRIEF-2026-9999",
   "title": "故意写坏的任务包（校验器夹具）",
   "decisionQuestion": "AI Coding 工具",
-
   "subject": {
     "unit": "产品",
-    "boundary": { "includes": ["编码工具"], "excludes": [] },
-    "source": { "type": "catalog_enumeration" },
-    "cardinality": { "expected": 30, "topK": 5 }
+    "boundary": {
+      "includes": [
+        "编码工具"
+      ],
+      "excludes": []
+    },
+    "source": {
+      "type": "catalog_enumeration"
+    },
+    "cardinality": {
+      "expected": 30,
+      "topK": 5
+    }
   },
-
   "criteria": {
     "dimensions": [
-      { "id": "x", "name": "某维度", "type": "ordinal", "weight": 40,
-        "anchors": { "高": "很好", "低": "不好" }, "ownerRole": "domain-analyst" },
-      { "id": "y", "name": "另一维度", "type": "ordinal", "anchors": { "10": "好", "0": "差" } }
+      {
+        "id": "x",
+        "name": "某维度",
+        "type": "ordinal",
+        "weight": 40,
+        "anchors": {
+          "高": "很好",
+          "低": "不好"
+        },
+        "ownerRole": "domain-analyst"
+      },
+      {
+        "id": "y",
+        "name": "另一维度",
+        "type": "ordinal",
+        "anchors": {
+          "10": "好",
+          "0": "差"
+        }
+      }
     ],
     "gates": [
-      { "id": "GX-1", "name": "数据可得性闸", "rule": "核心指标数据不可得", "action": "reject", "evaluateAfter": "characterize" },
-      { "id": "GX-2", "name": "依赖不存在的维度", "rule": "维度 z 得分过低", "action": "reject", "evaluateAfter": "characterize", "dependsOn": ["z"] }
+      {
+        "id": "GX-1",
+        "name": "数据可得性闸",
+        "rule": "核心指标数据不可得",
+        "action": "reject",
+        "evaluateAfter": "characterize"
+      },
+      {
+        "id": "GX-2",
+        "name": "依赖不存在的维度",
+        "rule": "维度 z 得分过低",
+        "action": "reject",
+        "evaluateAfter": "characterize",
+        "dependsOn": [
+          "z"
+        ]
+      }
     ]
   },
-
   "aggregation": [
-    { "operator": "cluster", "config": { "byDimension": "x" } },
-    { "operator": "diff", "config": {} }
+    {
+      "operator": "cluster",
+      "config": {
+        "byDimension": "x"
+      }
+    },
+    {
+      "operator": "trend",
+      "config": {}
+    }
   ],
-
   "evidencePolicy": {
-    "grades": { "A": [], "B": ["博客"], "C": ["评测"], "D": ["社区"] },
+    "grades": {
+      "A": [],
+      "B": [
+        "博客"
+      ],
+      "C": [
+        "评测"
+      ],
+      "D": [
+        "社区"
+      ]
+    },
     "minGrade": "C",
     "maxAgeMonths": 6,
-    "directVerification": { "available": true, "required": true, "methods": [] },
+    "directVerification": {
+      "available": true,
+      "required": true,
+      "methods": []
+    },
     "crossCheckRequired": false
   },
-
-  "temporal": { "horizonMonths": 12, "reportValidityMonths": 3 },
-  "output": { "template": "x.md", "audience": "谁都行", "depth": "full" },
-  "domainPack": null
+  "temporal": {
+    "horizonMonths": 12,
+    "reportValidityMonths": 3
+  },
+  "output": {
+    "template": "x.md",
+    "audience": "谁都行",
+    "depth": "full"
+  },
+  "domainPack": null,
+  "rework": {
+    "perSubject": 5,
+    "globalShare": 0.6,
+    "requireNewEvidence": false
+  },
+  "interpretation": {
+    "ourContext": [],
+    "requiredCategories": [
+      "can_adopt"
+    ]
+  }
 }

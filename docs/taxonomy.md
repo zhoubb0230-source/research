@@ -76,7 +76,7 @@
 - 数据与可观测：`milvus` `pgvector` `langfuse` `cozeloop` `promptfoo`
 
 ### 多 Agent 运行时与承载平台
-`openclaw`
+`openclaw` `deepseek-harness`
 
 ### 模型（用于角色—模型路由等场景）
 `claude-fable-5` `claude-opus-5` `claude-sonnet-5` `claude-haiku-4-5`

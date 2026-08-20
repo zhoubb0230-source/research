@@ -4,7 +4,7 @@
 **不含**：Agent 平台本身的机制与产品（见 [agent-platform](../agent-platform/INDEX.md)）。本领域关注的是"用多 Agent 做洞察这件事怎么做对"，不是"Agent 平台怎么建"。
 详见 [docs/taxonomy.md](../../docs/taxonomy.md#business-insight--业务洞察)。
 
-最后更新：2026-08-19 ｜ 条目数：4
+最后更新：2026-08-19 ｜ 条目数：5
 
 ## 业界洞察 · insights/
 
@@ -24,6 +24,7 @@
 | [business-insight-solution-0002](solutions/2026-08-19-opportunity-screening-rubric.md) | 产业机会经纬线：闸门规则与评分卡 | 经纬线拆成先过闸后加权两段；毛利看在位者、两强看是否受管制、缺数据不淘汰 | selection, rubric, opportunity-scouting, export-control | draft | 2026-08-19 |
 | [business-insight-solution-0003](solutions/2026-08-19-openclaw-deployment.md) | 业务洞察专家团的 OpenClaw 落地方案 | 钩子不能阻断，闸门改放进唯一发布通道；派发深度必须设2，红队隔离由平台保证 | landing, multi-agent, orchestration, guardrail, anti-hallucination | draft | 2026-08-19 |
 | [business-insight-solution-0004](solutions/2026-08-19-insight-service-spine.md) | 洞察服务的统一骨架与任务包规范 | 洞察需求的差异是退化不是缺失；一条骨架加参数化，范式降级为预设而非类型 | architecture, selection, rubric, guardrail, anti-hallucination | draft | 2026-08-19 |
+| [business-insight-solution-0005](solutions/2026-08-19-dsh-deployment.md) | 洞察服务的 DeepSeek Harness 试跑方案 | 角色定义走 skills 而非配置，把唯一形状未确认的部分隔离到一个可弃文件 | landing, multi-agent, orchestration, guardrail | draft | 2026-08-19 |
 
 ## 产品档案 · vendors/
 
@@ -46,6 +47,7 @@
 | [data-sources/](assets/expert-team/data-sources/) | 数据源类型、证据等级判定与口径陷阱清单 |
 | [expert-team-openclaw/](assets/expert-team-openclaw/) | **OpenClaw 部署包**：12 角色配置、安装脚本、发布闸、钩子与总调度运行手册 |
 | [insight-service/](assets/insight-service/) | **洞察服务骨架**：九动作骨架规范、任务包 Schema、六个聚合算子、两份验证预设与校验器 |
+| [expert-team-dsh/](assets/expert-team-dsh/) | **DeepSeek Harness 试跑包**：12 角色 skills 生成器、配置覆盖、十动作运行手册与发布闸 |
 
 > **本领域的资产与方案中不含任何真实产业数据。** 产业数据只能由专家团在运行时带来源产出，
 > 存入 `assets/evidence/<batch>/`，并经 `verify_report.py` 校验后方可写入报告。

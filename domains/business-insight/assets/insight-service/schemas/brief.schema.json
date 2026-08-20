@@ -176,11 +176,11 @@
         "additionalProperties": false,
         "required": ["operator"],
         "properties": {
-          "operator": { "enum": ["rank", "matrix", "cluster", "verdict", "diff", "rank_hypotheses"] },
+          "operator": { "enum": ["rank", "matrix", "cluster", "verdict", "trend", "rank_hypotheses"] },
           "config": {
             "type": "object",
             "additionalProperties": true,
-            "description": "算子专属参数。rank: {adjustments}｜cluster: {byDimension}｜diff: {baselineRef}"
+            "description": "算子专属参数。rank: {adjustments, topKBuffer}｜cluster: {byDimension}｜trend: {baselines[]}"
           }
         }
       }
@@ -223,6 +223,48 @@
       }
     },
 
+    "rework": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "返工预算。回环用预算约束而非轮次约束——轮次挡不住「补证→重刻画→再质疑→再补证」的转圈。见 ../spine.md §4.4",
+      "properties": {
+        "perSubject": {
+          "type": "integer", "minimum": 0, "maximum": 5, "default": 2,
+          "description": "单个对象的返工次数上限。超出则强制进仲裁"
+        },
+        "globalShare": {
+          "type": "number", "minimum": 0, "maximum": 1, "default": 0.2,
+          "description": "返工消耗占本批次总预算的比例上限"
+        },
+        "requireNewEvidence": {
+          "type": "boolean", "default": true,
+          "description": "单调收敛判据：每次返工必须产出新的 evidence_id。为 false 会让返工可能空转，仅在调试时关闭"
+        },
+        "topKBuffer": {
+          "type": "integer", "minimum": 0, "default": 3,
+          "description": "证伪阶段多做的对象数（Top K + N）。重排后新进 Top K 的对象大概率已证伪，避免二次回环"
+        }
+      }
+    },
+
+    "interpretation": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "解读所需的「我方处境」。这些信息不在证据库里，必须由需求方提供，否则解读只能泛泛而谈",
+      "properties": {
+        "ourContext": {
+          "type": "array", "items": { "type": "string" },
+          "description": "我方能力、约束、战略方向、时间窗等。例：现有产线可复用的工艺能力、今年的投入上限"
+        },
+        "requiredCategories": {
+          "type": "array",
+          "items": { "enum": ["can_adopt", "verify_first", "do_not_pursue"] },
+          "default": ["can_adopt", "verify_first", "do_not_pursue"],
+          "description": "解读必须覆盖的类别。do_not_pursue（明确不做）最容易被略过也最有价值，默认必填"
+        }
+      }
+    },
+
     "temporal": {
       "type": "object",
       "additionalProperties": false,
@@ -246,7 +288,8 @@
           "enum": ["quick", "full"],
           "description": "quick 缩小取证广度、证伪压到 1 轮，**但九个动作一个都不能少**；full 完整流水线"
         },
-        "archiveTo": { "type": ["string", "null"], "description": "归档目录，如 domains/ai-coding/insights/" }
+        "archiveTo": { "type": ["string", "null"], "description": "归档目录，如 domains/ai-coding/insights/" },
+        "baselineTo": { "type": ["string", "null"], "description": "结构化基线快照的输出路径。trend 算子与下一轮出局池复检的输入，见 ../spine.md §6" }
       }
     },
 
