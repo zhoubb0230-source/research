@@ -22,6 +22,7 @@ AI 先进技术调研知识库的一级入口。**先在这里定位领域，再
 
 | 日期 | 领域 | 条目 | 变更 |
 |---|---|---|---|
+| 2026-08-19 | business-insight | business-insight-solution-0004 | 新增试跑验收契约（八项当场可做的检验）；修正首轮试跑选型理由 |
 | 2026-08-19 | business-insight | business-insight-solution-0005 | 新增《洞察服务的 DeepSeek Harness 试跑方案》+ 试跑包 |
 | 2026-08-19 | business-insight | business-insight-solution-0004 | 骨架修订：新增解读动作与五条回边、分诊拒绝路径、基线快照、trend 吸收 diff |
 | 2026-08-19 | business-insight | business-insight-solution-0004 | 新增《洞察服务的统一骨架与任务包规范》+ 任务包 Schema、算子集与校验器 |

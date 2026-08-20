@@ -46,7 +46,7 @@
 | [checks/verify_report.py](assets/expert-team/checks/verify_report.py) | 渲染前确定性数字校验（防编造第三道闸，含自测夹具） |
 | [data-sources/](assets/expert-team/data-sources/) | 数据源类型、证据等级判定与口径陷阱清单 |
 | [expert-team-openclaw/](assets/expert-team-openclaw/) | **OpenClaw 部署包**：12 角色配置、安装脚本、发布闸、钩子与总调度运行手册 |
-| [insight-service/](assets/insight-service/) | **洞察服务骨架**：九动作骨架规范、任务包 Schema、六个聚合算子、两份验证预设与校验器 |
+| [insight-service/](assets/insight-service/) | **洞察服务骨架**：十动作骨架与回环模型、任务包 Schema、五个聚合算子、**试跑验收契约**、两份预设与校验器 |
 | [expert-team-dsh/](assets/expert-team-dsh/) | **DeepSeek Harness 试跑包**：12 角色 skills 生成器、配置覆盖、十动作运行手册与发布闸 |
 
 > **本领域的资产与方案中不含任何真实产业数据。** 产业数据只能由专家团在运行时带来源产出，
