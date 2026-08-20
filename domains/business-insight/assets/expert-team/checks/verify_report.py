@@ -27,6 +27,13 @@ import sys
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 
+# Windows 控制台默认可能是 GBK，制表符与 ✓/✗ 会触发 UnicodeEncodeError
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 # ---------------------------------------------------------------------------
 # 「数据型数字」的识别：数字 + 单位。纯序号、章节号、列表编号不在其列。
 # ---------------------------------------------------------------------------

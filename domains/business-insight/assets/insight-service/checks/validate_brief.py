@@ -20,6 +20,13 @@ import json
 import pathlib
 import sys
 
+# Windows 控制台默认可能是 GBK，制表符与 ✓/✗ 会触发 UnicodeEncodeError
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 SCHEMA = pathlib.Path(__file__).resolve().parent.parent / "schemas" / "brief.schema.json"
 
 

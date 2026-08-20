@@ -32,6 +32,8 @@ dsh 能承载这套专家团，而且在一个关键点上**比 OpenClaw 更适�
 | **多 Agent 协作** | `spawnTeammate()` 建队友、`sendMessage()` 派任务、`waitForChange()` 等结果（**有界等待，十秒到一小时**） | subsystems/agent-team.md |
 | 消息可靠性 | 持久收件箱：先落库再投递；收据只在对方 pending inbox 或已记录消息落库后确认 | 同上 |
 | pre-step 钩子 | **返回的 `agent/pre-step` 决策是 authoritative 的**，可用于校验/拒绝 | agent-lifecycle.md |
+| Skill 的性质 | 「可扩展 agent 能力的**可选指令**」——是被发现、被调用的资源，**不是 agent 的人格绑定** | subsystems/skills.md |
+| 人格绑定 | `SpawnTeammateRequest` 含 **`prompt`** 字段，人格在建队友时传入 | subsystems/agent-team.md |
 
 ---
 
@@ -52,7 +54,24 @@ dsh 的 pre-step 钩子**能**拒绝，理论上可以把数字校验挂上去�
 
 ## 4. 适配决策
 
-### 4.1 角色定义走 skills，不走配置
+### 4.1 角色定义走 skills，不走配置 —— 但绑定在 spawnTeammate
+
+这是本方案最重要的一个选择。理由：**skill 的格式与发现规则是文档明确的，
+而 `cordis.patch.yml` 的 verbatim 形状不是。**
+
+**但要分清两件事**：
+
+| | 谁负责 |
+|---|---|
+| 角色定义**存在哪** | `.dsh/skills/<agentId>/SKILL.md`（项目级 100 档，优先级最高） |
+| 角色人格**怎么绑上去** | `spawnTeammate(prompt=<SKILL.md 正文>)` |
+
+skill 是「可被调用的资源」，不会自动让某个 agent 变成某个角色。
+只把文件放进去而不在建队友时传 `prompt`，12 个专家等于没装。
+`install.py` 额外生成 `.dsh/roster.json`，就是给总调度查路径用的。
+
+> 若 `--dump-config` 显示 `AgentOptions` 支持 per-agent prompt，那条路比运行时传更硬
+> （配置层约束 > 运行时约束），到时候可以改。见 §5 第 2 项。
 
 这是本方案最重要的一个选择。理由：**skill 的格式与发现规则是文档明确的，
 而 `cordis.patch.yml` 的 verbatim 形状不是。**
@@ -125,3 +144,41 @@ dsh 只有 `off | low | high | max`。原设计中 medium 档的四个角色
 - `docs/subsystems/skills.md`（skill 格式、发现优先级、frontmatter）
 
 本仓库不缓存其内容；dsh 处于 developer preview 且迭代很快，**以当期文档与 `--dump-config` 为准**。
+
+
+---
+
+## 7. 跨平台与脚本
+
+### 7.1 逻辑只有一份
+
+| 文件 | 角色 |
+|---|---|
+| `install.py` / `bin/publish_report.py` | **业务逻辑，跨平台，已在 Linux 上实测** |
+| `install.ps1` / `bin/publish-report.ps1` | Windows 薄封装：找 Python → 转调 |
+| `install.sh` / `bin/publish-report.sh` | Linux/macOS 薄封装：同上 |
+
+封装里没有任何业务逻辑。三端跑同一份代码，不会出现
+「Linux 上好好的、Windows 上行为不一样」这类问题。
+
+⚠️ **`.ps1` 未经本地语法校验** —— 本环境没有 PowerShell。封装很薄（找 Python + 转调），
+若它报错，直接跑 `python install.py <目录> --write` 即可，效果完全一致。
+
+### 7.2 Windows 上处理掉的三个坑
+
+| 坑 | 处理 |
+|---|---|
+| **BOM 破坏 frontmatter 解析** | 生成器显式 `encoding="utf-8"` 写入，Python 默认不加 BOM |
+| **行尾** | 显式 `newline="\n"`，统一 LF，不受平台影响 |
+| **控制台 GBK 编码炸掉 ✓/✗ 与制表符** | Python 侧 `sys.stdout.reconfigure(encoding="utf-8")`；PowerShell 侧设 `[Console]::OutputEncoding` 与 `PYTHONUTF8=1` |
+
+第一条最要紧：`SKILL.md` 带 BOM 会让 frontmatter 解析失败，而这**不一定报错**——
+可能只是该 skill 被静默忽略。
+
+### 7.3 PowerShell 执行策略
+
+若被拦，本会话临时放行即可，不必改全局设置：
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```

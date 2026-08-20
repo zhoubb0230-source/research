@@ -5,11 +5,35 @@
 
 ## 通用派发规则
 
-用 agent team 接口派发队友：
+### 角色人格怎么绑上去（**最容易做错的一步**）
+
+`.dsh/skills/<agentId>/SKILL.md` 里存的是角色定义，但**skill 是"可被调用的指令"，
+不是"这个 agent 就是这个角色"的自动绑定**。放着不管，队友不会自动变成那个专家。
+
+绑定发生在 `spawnTeammate()`：它的请求体里有 `prompt` 字段。
+
+**建队友时，把该角色 SKILL.md 的正文作为 `prompt` 传进去。**
+
+```
+读 <项目>/.dsh/roster.json           ← install 生成的清单：agentId → skill 路径
+读 .dsh/skills/<agentId>/SKILL.md    ← 取正文（去掉 frontmatter）
+spawnTeammate(
+  name        = <agentId>,
+  description = <roster 里的中文名与职责>,
+  prompt      = <SKILL.md 正文>,
+  contextMode = isolated,           ← 质疑审查专家尤其不可共享上下文
+  provider    = <你的 provider>
+)
+```
+
+队友建好后，人格就固定了（`name` 是不可变标签）。后续用 `sendMessage()` 只发任务，
+不需要重复发人格。
+
+### 三个接口
 
 | 步骤 | 接口 | 要点 |
 |---|---|---|
-| 建队友 | `spawnTeammate()` | 传 name / description / prompt / context mode / provider |
+| 建队友 | `spawnTeammate()` | name / description / **prompt（人格）** / context mode / provider |
 | 派任务 | `sendMessage()` | 目标 name + 内容 + 调度模式 |
 | 等结果 | `waitForChange()` | 有界等待，**十秒到一小时**，不要写忙轮询 |
 
