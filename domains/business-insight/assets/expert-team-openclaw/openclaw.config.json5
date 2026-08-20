@@ -1,273 +1,121 @@
 // ===========================================================================
-// 业务洞察专家团 · OpenClaw 配置片段
+// 业务洞察专家团 · OpenClaw 编排框架
 // ---------------------------------------------------------------------------
-// 合并到 ~/.openclaw/openclaw.json。不要整体覆盖你已有的配置——
-// install.sh 会做键级合并并在写入前用 `openclaw config schema` 校验。
+// 本文件只含【全局层】：agents.defaults、bindings、skills 加载策略。
+// 12 位专家的 agents.entries 片段各自住在 experts/<agentId>/entry.json5，
+// 由 install.sh 合并进来 —— 这样改一位专家不会碰到别人。
 //
-// 本文件是「带注释的人类可读主本」。install.sh 会剥离整行 // 注释后
-// 生成严格 JSON 再合并（因此本文件刻意不使用行尾注释与尾逗号）。
+// 合并到 ~/.openclaw/openclaw.json。不要整体覆盖你已有的配置：
+// install.sh 做键级合并，并在写入前备份原配置。
 //
-// 约定：所有 <占位> 必须替换后才能上线，install.sh 会检查残留占位符并拒绝写入。
+// 本文件是「带注释的人类可读主本」。install.sh 剥离整行 // 注释后生成严格 JSON，
+// 因此刻意不使用行尾注释与尾逗号。
+//
+// 所有 <占位> 必须替换后才能上线，install.sh 会检查残留占位符并拒绝写入。
 // ===========================================================================
 {
-  // -------------------------------------------------------------------------
-  // 1. 多 Agent 舰队声明
-  //    ownership=explicit：多 agent 部署必须显式绑定，禁止隐式落到默认 agent
-  // -------------------------------------------------------------------------
   "agents": {
+    // 多 agent 舰队必须显式绑定。没有匹配 binding 的入站消息 fail closed，
+    // 而不是悄悄落到某个 agent 上。
     "ownership": "explicit",
 
-    // ---- 跨 agent 默认值（agent-loop 行为放这里，基础设施放根级） ----
     "defaults": {
-      "model": {
-        "primary": "anthropic/claude-opus-5",
-        "fallbacks": ["anthropic/claude-opus-4-8"]
-      },
-      "utilityModel": "anthropic/claude-haiku-4-5",
-      "thinkingDefault": "medium",
+      // ---- 引导文件 ----
+      // 我们自己管理全部工作区文件（install.sh 生成），
+      // 所以关掉 OpenClaw 的自动播种，避免它写入 BOOTSTRAP.md 之类的模板文件。
+      "skipBootstrap": true,
 
-      // 工作区引导文件（SOUL.md / AGENTS.md）注入策略。
-      // always：每轮都注入，保证长流水线中途不丢角色约束与护栏。
+      // always：每轮都注入工作区引导文件。
+      // 洞察是长流水线，continuation-skip 会让中途某些轮次丢掉角色约束与护栏。
       "contextInjection": "always",
+
+      // 实测 12 位专家的引导文件在 3629–4072 字符之间，离这两条上限很远。
+      // 保留默认值即可；若日后往 SOUL/AGENTS 里加内容，注意别顶到 20000。
       "bootstrapMaxChars": 20000,
       "bootstrapTotalMaxChars": 60000,
 
-      // ---- 子 Agent 派发策略 ----
+      // ---- 模型 ----
+      // defaults 只作兜底。12 位专家全部在自己的 entry.json5 里显式指定 model，
+      // 用字符串形态（= 严格主模型、无 fallback）：
+      // 批次中途悄悄换模型会让跨对象的结论不可比。
+      "model": { "primary": "anthropic/claude-opus-5", "fallbacks": [] },
+      "utilityModel": "anthropic/claude-haiku-4-5",
+      "thinkingDefault": "high",
+
+      // ---- 子 Agent 派发 ----
       "subagents": {
-        // 必须 >= 2：depth-1 只有在 maxSpawnDepth >= 2 时才被授予 sessions_spawn，
+        // 必须 >= 2：depth-1 只有在 maxSpawnDepth >= 2 时才被授予 sessions_spawn。
         // 数据采集专家需要这项权限才能 fan-out 出 depth-2 采集工蜂。
         "maxSpawnDepth": 2,
         "maxChildrenPerAgent": 20,
+        // 全局并发车道。受你的模型速率限制约束，需实测回调。
         "maxConcurrent": 12,
+        // 禁止不指名的模糊派发。
         "requireAgentId": true,
-        "archiveAfterMinutes": 240,
+        // 取证类任务远超默认的 120000（2 分钟）。
         "announceTimeoutMs": 600000,
+        // 0 = 不设运行超时。长批次的深度动作可能跑很久。
         "runTimeoutSeconds": 0,
-        "delegationMode": "prefer"
-      },
-
-      "skills": []
+        // 长批次中途不要把子会话归档掉。
+        "archiveAfterMinutes": 240
+      }
     },
 
-    // ---- 12 个专家角色 ----
-    "entries": {
-
-      // 🧭 洞察总调度 —— 唯一 main agent，只推进状态机，不做内容判断
-      "chief-coordinator": {
-        "default": true,
-        "workspace": "<REPO>/domains/business-insight/assets/expert-team-openclaw/workspaces/chief-coordinator",
-        "agentDir": "~/.openclaw/agents/chief-coordinator/agent",
-        "identity": { "name": "洞察总调度", "emoji": "🧭" },
-        "model": { "primary": "anthropic/claude-opus-5" },
-        "thinkingDefault": "high",
-        "subagents": {
-          "allowAgents": [
-            "rubric-owner",
-            "opportunity-scanner",
-            "data-collector",
-            "industry-analyst",
-            "techchain-analyst",
-            "red-team-challenger",
-            "fact-verifier",
-            "compliance-officer",
-            "arbiter",
-            "insight-director",
-            "report-writer"
-          ]
-        }
-      },
-
-      // 📐 口径定义专家 —— rubric 唯一真相源，一轮只跑一次
-      "rubric-owner": {
-        "workspace": "<REPO>/domains/business-insight/assets/expert-team-openclaw/workspaces/rubric-owner",
-        "agentDir": "~/.openclaw/agents/rubric-owner/agent",
-        "identity": { "name": "口径定义专家", "emoji": "📐" },
-        "model": { "primary": "anthropic/claude-opus-5" },
-        "thinkingDefault": "high",
-        "sandbox": "all"
-      },
-
-      // 🔭 机会枚举专家 —— 目录穷举，只管覆盖率
-      "opportunity-scanner": {
-        "workspace": "<REPO>/domains/business-insight/assets/expert-team-openclaw/workspaces/opportunity-scanner",
-        "agentDir": "~/.openclaw/agents/opportunity-scanner/agent",
-        "identity": { "name": "机会枚举专家", "emoji": "🔭" },
-        "model": { "primary": "anthropic/claude-opus-5" },
-        "thinkingDefault": "medium",
-        "sandbox": "all"
-      },
-
-      // 🔍 数据采集专家 —— 成本占比最高，唯一可自我 fan-out 的专家
-      "data-collector": {
-        "workspace": "<REPO>/domains/business-insight/assets/expert-team-openclaw/workspaces/data-collector",
-        "agentDir": "~/.openclaw/agents/data-collector/agent",
-        "identity": { "name": "数据采集专家", "emoji": "🔍" },
-        "model": { "primary": "anthropic/claude-sonnet-5" },
-        "thinkingDefault": "medium",
-        "sandbox": "all",
-        "subagents": {
-          "allowAgents": ["data-collector"],
-          "maxChildrenPerAgent": 20
-        }
-      },
-
-      // 📊 产业分析专家 —— B/C/D/E 维 + g 修正项
-      "industry-analyst": {
-        "workspace": "<REPO>/domains/business-insight/assets/expert-team-openclaw/workspaces/industry-analyst",
-        "agentDir": "~/.openclaw/agents/industry-analyst/agent",
-        "identity": { "name": "产业分析专家", "emoji": "📊" },
-        "model": { "primary": "anthropic/claude-opus-5" },
-        "thinkingDefault": "high",
-        "sandbox": "all"
-      },
-
-      // ⚙️ 技术链分析专家 —— A 维（最高权重 25）+ F 维 + h 修正项
-      "techchain-analyst": {
-        "workspace": "<REPO>/domains/business-insight/assets/expert-team-openclaw/workspaces/techchain-analyst",
-        "agentDir": "~/.openclaw/agents/techchain-analyst/agent",
-        "identity": { "name": "技术链分析专家", "emoji": "⚙️" },
-        "model": { "primary": "anthropic/claude-opus-5" },
-        "thinkingDefault": "high",
-        "sandbox": "all"
-      },
-
-      // 🥊 质疑审查专家 —— 必须与分析专家异源：不同模型 + spawn 时 context=isolated
-      "red-team-challenger": {
-        "workspace": "<REPO>/domains/business-insight/assets/expert-team-openclaw/workspaces/red-team-challenger",
-        "agentDir": "~/.openclaw/agents/red-team-challenger/agent",
-        "identity": { "name": "质疑审查专家", "emoji": "🥊" },
-        "model": { "primary": "anthropic/claude-fable-5" },
-        "thinkingDefault": "high",
-        "sandbox": "all"
-      },
-
-      // ✅ 数据核证专家 —— 硬闸门，只有它判 verified 的证据能进入评分
-      "fact-verifier": {
-        "workspace": "<REPO>/domains/business-insight/assets/expert-team-openclaw/workspaces/fact-verifier",
-        "agentDir": "~/.openclaw/agents/fact-verifier/agent",
-        "identity": { "name": "数据核证专家", "emoji": "✅" },
-        "model": { "primary": "anthropic/claude-sonnet-5" },
-        "thinkingDefault": "medium",
-        "sandbox": "all"
-      },
-
-      // 🛡️ 合规管制专家 —— G-3/G-4 闸门 + i 修正项，判定必须回原文
-      "compliance-officer": {
-        "workspace": "<REPO>/domains/business-insight/assets/expert-team-openclaw/workspaces/compliance-officer",
-        "agentDir": "~/.openclaw/agents/compliance-officer/agent",
-        "identity": { "name": "合规管制专家", "emoji": "🛡️" },
-        "model": { "primary": "anthropic/claude-opus-5" },
-        "thinkingDefault": "high",
-        "sandbox": "all"
-      },
-
-      // ⚖️ 争议仲裁专家 —— 按证据等级裁决，禁止投票与取中值
-      "arbiter": {
-        "workspace": "<REPO>/domains/business-insight/assets/expert-team-openclaw/workspaces/arbiter",
-        "agentDir": "~/.openclaw/agents/arbiter/agent",
-        "identity": { "name": "争议仲裁专家", "emoji": "⚖️" },
-        "model": { "primary": "anthropic/claude-opus-5" },
-        "thinkingDefault": "high",
-        "sandbox": "all"
-      },
-
-      // 🎯 首席洞察专家 —— 只判断「结论对决策有没有用」，有权打回无权改数
-      "insight-director": {
-        "workspace": "<REPO>/domains/business-insight/assets/expert-team-openclaw/workspaces/insight-director",
-        "agentDir": "~/.openclaw/agents/insight-director/agent",
-        "identity": { "name": "首席洞察专家", "emoji": "🎯" },
-        "model": { "primary": "anthropic/claude-fable-5" },
-        "thinkingDefault": "high",
-        "sandbox": "all"
-      },
-
-      // 📝 报告生成专家 —— 只做措辞改写。
-      //    sandbox=all 把写入限制在自己的工作区；发布目录在沙箱之外，
-      //    唯一入口是洞察总调度执行的 bin/publish-report.sh（内含数字校验）。
-      //    deny exec：防止它自行绕过发布闸。
-      "report-writer": {
-        "workspace": "<REPO>/domains/business-insight/assets/expert-team-openclaw/workspaces/report-writer",
-        "agentDir": "~/.openclaw/agents/report-writer/agent",
-        "identity": { "name": "报告生成专家", "emoji": "📝" },
-        "model": { "primary": "anthropic/claude-haiku-4-5" },
-        "thinkingDefault": "low",
-        "sandbox": "all",
-        "tools": {
-          "deny": ["exec"]
-        }
-      }
-    }
+    // ---- 12 位专家 ----
+    // 由 install.sh 从 experts/<agentId>/entry.json5 逐一读入并填在这里。
+    // 直接编辑生成产物会在下次 install 时被覆盖 —— 改 entry.json5。
+    "entries": {}
   },
 
   // -------------------------------------------------------------------------
-  // 2. 通道绑定 —— 只把「洞察总调度」暴露给人；其余 11 个专家仅作为子 Agent 被派发
-  //    <CHANNEL> / <ACCOUNT_ID> 替换为你实际使用的通道与账号
+  // 通道绑定：只有洞察总调度对人暴露
   // -------------------------------------------------------------------------
+  // 其余 11 位仅作为 sessions_spawn 的目标存在，人不直接对它们说话。
+  // 这不只是习惯问题：给某位专家开一条人类通道，就等于给了它一条绕过
+  // 状态机与闸门的入口。
   "bindings": [
     {
       "agentId": "chief-coordinator",
-      "match": { "channel": "<CHANNEL>", "accountId": "<ACCOUNT_ID>" }
+      "match": {
+        "channel": "<CHANNEL>",
+        "accountId": "<ACCOUNT_ID>"
+      }
     }
   ],
 
   // -------------------------------------------------------------------------
-  // 3. 会话策略
-  //    洞察流水线是长任务，禁止按日重置切断批次上下文
+  // 会话与消息
   // -------------------------------------------------------------------------
   "session": {
-    "dmScope": "per-channel-peer",
-    "groupScope": "per-group",
-    "reset": { "mode": "off" },
-    "maintenance": {
-      "pruneAfter": "180d",
-      "maxEntries": 5000
-    }
+    // 洞察是长任务。按日重置会在批次中途切断上下文。
+    "reset": { "mode": "off" }
   },
 
   // -------------------------------------------------------------------------
-  // 4. 消息队列
-  //    followup：批次运行中途来的新消息排队处理，不打断正在跑的阶段。
-  //    默认的 steer 会把新消息注入正在执行的 run，可能污染阶段产出。
+  // Hooks（可选，第二重保险）
   // -------------------------------------------------------------------------
-  "messages": {
-    "queue": { "mode": "followup" },
-    "inbound": { "debounceMs": 2000 }
-  },
-
-  // -------------------------------------------------------------------------
-  // 5. 内部脚本钩子
-  //    注意：OpenClaw 的 hooks 是「副作用」，没有 deny/cancel 语义，不能阻断动作。
-  //    因此它们在本方案里只承担「注入」与「留痕」，绝不承担闸门职责。
-  //    真正的阻断闸在 bin/publish-report.sh（见 OPENCLAW-NOTES.md §3）。
-  // -------------------------------------------------------------------------
+  // ⚠️ OpenClaw 的 internal hooks 【没有 deny/cancel 语义】，只能注入与记录，
+  //    不能阻断任何动作。真正的阻断闸是 bin/publish-report.sh。
+  //    把校验挂在 hook 上会制造「已经校验过」的错觉，比没有闸更危险。
   "hooks": {
     "internal": {
-      "enabled": true,
-      "load": {
-        "extraDirs": ["<REPO>/domains/business-insight/assets/expert-team-openclaw/hooks"]
-      },
       "entries": {
         "bootstrap-guardrails": {
           "enabled": true,
           "env": {
-            "GUARDRAILS_PATH": "<REPO>/domains/business-insight/assets/expert-team/prompts/_shared-guardrails.md"
+            "GUARDRAILS_PATH": "<REPO>/domains/business-insight/assets/expert-team/experts/_shared/GUARDRAILS.md"
           }
         },
-        "run-ledger": {
-          "enabled": true,
-          "env": {
-            "LEDGER_PATH": "~/.openclaw/logs/business-insight-ledger.jsonl"
-          }
-        }
+        "run-ledger": { "enabled": true }
       }
     }
   },
 
-  // -------------------------------------------------------------------------
-  // 6. 定时任务 —— 季度重跑（P4 常态化阶段启用，首轮先关）
-  // -------------------------------------------------------------------------
-  "cron": {
-    "enabled": false,
-    "sessionRetention": "720h"
+  "messages": {
+    "queue": {
+      // followup：新消息排队，等当前 run 结束再处理。
+      // 默认的 steer 会把新消息注入正在跑的 run，可能污染阶段产出。
+      "mode": "followup"
+    }
   }
 }

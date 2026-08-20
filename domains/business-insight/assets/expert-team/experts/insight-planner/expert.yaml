@@ -1,0 +1,36 @@
+id: insight-planner
+nameCn: 洞察规划专家
+emoji: 🗺️
+optional: false
+actions: ["① 界定（含分诊）"]
+
+compute:
+  tier: high
+  rationale: 判据设计的错误会污染整条流水线，且不可在中途修复；这一步值最高档之一的算力。
+
+isolation: fresh        # 不看上一批次的口径，避免沿用旧判据
+
+delegation:
+  canDelegate: false
+
+tools:
+  need: [read, write, browser]
+  deny: [exec]
+  rationale: 需要检索来判断"知识库里有没有未过期的同题结论"；不需要执行命令。
+
+skills: [triage-and-brief]
+
+io:
+  inputs: [自然语言需求, 业务约束]
+  outputs: [brief.json, 或「非洞察需求」拒绝结论]
+  schemas: [insight-service/schemas/brief.schema.json]
+
+gates:
+  - 产出必须通过 insight-service/checks/validate_brief.py
+  - brief 冻结须人工签署，本角色不得自行置为 frozen
+
+forbidden:
+  - 在批次进行中修改已冻结的 brief
+  - 引入无法判定的软性维度
+  - 设计对缺失数据扣分的判据
+  - 跳过分诊直接开工

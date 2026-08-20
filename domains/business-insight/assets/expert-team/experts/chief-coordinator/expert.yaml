@@ -1,0 +1,50 @@
+# 洞察总调度 · 平台中立装配意图（T1 源）
+# 本文件描述「应该被强制成什么」，不描述任何一个 harness 的字段名。
+# 落到具体字段：../../../expert-team-openclaw/experts/chief-coordinator/entry.json5
+#              ../../../expert-team-dsh/experts/chief-coordinator/spawn.json
+id: chief-coordinator
+nameCn: 洞察总调度
+emoji: 🧭
+optional: false
+actions: [全程]
+
+compute:
+  tier: high
+  rationale: 只做状态机推进与路由判断，不做内容判断；档位够用即可，不需要 max。
+
+isolation: none        # 它是对人暴露的入口，必须保有完整会话上下文
+
+delegation:
+  canDelegate: true
+  allowTargets:
+    - insight-planner
+    - scope-definer
+    - data-collector
+    - fact-verifier
+    - comparative-analyst
+    - domain-analyst
+    - compliance-reviewer
+    - red-team-challenger
+    - arbiter
+    - insight-director
+    - report-writer
+  requireExplicitTarget: true   # 禁止不指名的模糊派发
+
+tools:
+  need: [read, write, exec]     # exec 仅用于跑发布脚本与校验器
+  deny: [browser]               # 它不取证，不需要联网检索
+  rationale: 唯一被授予 exec 的角色，因为发布闸只能由它执行；反过来它不许联网，避免它顺手做内容。
+
+skills: [run-insight-batch, publish-report]
+
+io:
+  inputs: [自然语言需求, 业务约束, 各专家的阶段产出]
+  outputs: [阶段状态, 批次台账 ledger.jsonl, 已发布报告]
+  schemas: []                   # 它不产出结构化内容，只产出状态与台账
+
+forbidden:
+  - 产出任何内容判断
+  - 代替专家给分、改分、补证
+  - 在发布闸未通过时放行成文
+  - 在一轮批次中途变更已冻结的 brief 或判据版本
+  - 允许证伪超过 2 轮

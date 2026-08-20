@@ -1,0 +1,26 @@
+// ✅ 数据核证专家 —— agents.entries["fact-verifier"]
+// install.sh 把本文件合并进生成的 openclaw.json 的 agents.entries 下。
+// 正本人格与技能：../../expert-team/experts/fact-verifier/
+//
+// 装配理由：只用于打开证据卡里已给出的 URL 回源。给它浏览器自动化没有意义 —— 另找来源是取证不是核证。
+{
+  "workspace": "<WORKSPACE_ROOT>/fact-verifier",
+  "agentDir": "~/.openclaw/agents/fact-verifier/agent",
+  "identity": { "name": "数据核证专家", "emoji": "✅" },
+
+  "model": "anthropic/claude-sonnet-5",
+  "thinkingDefault": "low",
+  "contextInjection": "always",
+
+  "tools": {
+    "profile": "coding",
+    "deny": ["canvas", "nodes", "cron", "gateway", "image", "exec", "process", "browser", "sessions_spawn"]
+  },
+
+  "skills": ["verify-evidence"],
+
+  // 叶子角色不派发：tools.deny 里已有 sessions_spawn，这里不再声明 allowAgents。
+  // OpenClaw 的默认值本就是「只能派自己」，两条合起来是双保险。
+
+  "sandbox": { "mode": "off" }
+}

@@ -1,0 +1,38 @@
+id: insight-director
+nameCn: 首席洞察专家
+emoji: 🎯
+optional: false
+actions: ["⑨ 解读"]
+
+compute:
+  tier: max
+  rationale: |
+    解读是全流程唯一被允许越过证据边界的动作，也因此是最容易产出无依据断言的地方。
+    最难的判断给最多的算力，与质疑审查专家同档，这是刻意的。
+
+isolation: fresh
+
+delegation:
+  canDelegate: false
+
+tools:
+  need: [read, write]
+  deny: [browser, exec]
+  rationale: 它被禁止引入新的事实性数字；剥夺联网让这条禁令变成机制。
+
+skills: [interpret-and-accept]
+
+io:
+  inputs: [仲裁后的结论, brief.interpretation.ourContext]
+  outputs: [interpretation.json（三分法启示 + 验收结论）]
+  schemas: []
+
+gates:
+  - 我方处境来自 brief.interpretation.ourContext，不在证据库里；没有它不得开工
+  - 「明确不做」不可省略
+
+forbidden:
+  - 引入新的事实性数字
+  - 解读未经仲裁的结论
+  - 修改任何数据、赋值或证据
+  - 为了让报告读起来更有力而删掉不确定性标注

@@ -1,0 +1,26 @@
+// ⚖️ 争议仲裁专家 —— agents.entries["arbiter"]
+// install.sh 把本文件合并进生成的 openclaw.json 的 agents.entries 下。
+// 正本人格与技能：../../expert-team/experts/arbiter/
+//
+// 装配理由：剥夺联网让「禁止自行补证」从纪律变成机制。
+{
+  "workspace": "<WORKSPACE_ROOT>/arbiter",
+  "agentDir": "~/.openclaw/agents/arbiter/agent",
+  "identity": { "name": "争议仲裁专家", "emoji": "⚖️" },
+
+  "model": "anthropic/claude-opus-5",
+  "thinkingDefault": "high",
+  "contextInjection": "always",
+
+  "tools": {
+    "profile": "coding",
+    "deny": ["canvas", "nodes", "cron", "gateway", "image", "exec", "process", "browser", "web_search", "web_fetch", "sessions_spawn"]
+  },
+
+  "skills": ["adjudicate-challenges"],
+
+  // 叶子角色不派发：tools.deny 里已有 sessions_spawn，这里不再声明 allowAgents。
+  // OpenClaw 的默认值本就是「只能派自己」，两条合起来是双保险。
+
+  "sandbox": { "mode": "off" }
+}

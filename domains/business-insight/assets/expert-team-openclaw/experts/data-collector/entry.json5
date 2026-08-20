@@ -1,0 +1,28 @@
+// 🔍 数据采集专家 —— agents.entries["data-collector"]
+// install.sh 把本文件合并进生成的 openclaw.json 的 agents.entries 下。
+// 正本人格与技能：../../expert-team/experts/data-collector/
+//
+// 装配理由：唯一被授予 sessions_spawn 的叶子角色 —— 取证是唯一需要高并发的动作，它可 fan-out 出 depth-2 采集工蜂。
+{
+  "workspace": "<WORKSPACE_ROOT>/data-collector",
+  "agentDir": "~/.openclaw/agents/data-collector/agent",
+  "identity": { "name": "数据采集专家", "emoji": "🔍" },
+
+  "model": "anthropic/claude-sonnet-5",
+  "thinkingDefault": "low",
+  "contextInjection": "always",
+
+  "tools": {
+    "profile": "coding",
+    "alsoAllow": ["browser"],
+    "deny": ["canvas", "nodes", "cron", "gateway", "image", "exec", "process"]
+  },
+
+  "skills": ["collect-evidence"],
+
+  // 取证是唯一需要高并发的动作。它只能派【自己】fan-out 出 depth-2 采集工蜂，
+  // 派不动任何别的角色。因为 defaults 里 requireAgentId=true，必须把自己列进来。
+  "subagents": { "allowAgents": ["data-collector"] },
+
+  "sandbox": { "mode": "off" }
+}

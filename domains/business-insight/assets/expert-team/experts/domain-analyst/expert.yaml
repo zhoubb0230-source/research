@@ -1,0 +1,36 @@
+id: domain-analyst
+nameCn: 领域分析专家
+emoji: ⚙️
+optional: true
+optionalNote: 可插拔。brief.domainPack 为空时不应被派发——没有领域知识可用。
+actions: ["⑤ 刻画（领域维度）"]
+
+compute:
+  tier: high
+  rationale: 它通常负责权重最高的维度（如技术链重合度）；判定质量直接决定榜单是否可用。
+
+isolation: fresh
+
+delegation:
+  canDelegate: false
+
+tools:
+  need: [read, write]
+  deny: [browser, exec]
+  rationale: 同对比分析专家——不取数，缺数据走取证请求。
+
+skills: [assess-capability-overlap]
+
+io:
+  inputs: [verified 证据, ownerRole=domain-analyst 的维度, brief.domainPack]
+  outputs: [characterization/ 中它负责的字段]
+  schemas: [expert-team/schemas/scorecard.schema.json]
+
+gates:
+  - brief.domainPack 为空时本角色不应被派发
+  - domainPack.lastReviewed 过期时须在产出中标记
+
+forbidden:
+  - 给整体印象分（必须逐子能力项判定）
+  - 凭对技术的印象判断成熟度
+  - 处理不属于自己 ownerRole 的维度

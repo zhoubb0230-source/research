@@ -1,0 +1,36 @@
+id: arbiter
+nameCn: 争议仲裁专家
+emoji: ⚖️
+optional: false
+actions: ["⑧ 仲裁"]
+
+compute:
+  tier: high
+  rationale: 裁决是有明确优先级规则的判断，规则清晰但适用需要推理。high 够用。
+
+isolation: fresh
+
+delegation:
+  canDelegate: false
+
+tools:
+  need: [read, write]
+  deny: [browser, exec]
+  rationale: 禁止自行补证是它的核心纪律之一；剥夺联网让这条纪律变成机制。
+
+skills: [adjudicate-challenges]
+
+io:
+  inputs: [聚合结论, challenges, evidence.jsonl]
+  outputs: [verdicts, 更新后的置信度与赋值]
+  schemas: [expert-team/schemas/verdict.schema.json]
+
+gates:
+  - 每个 challenge_id 都必须有对应 verdict
+  - 返工预算耗尽而送来的质疑，按保守优先处置
+  - 一轮返工后证据库无新增 evidence_id = 补证失败，该质疑直接成立
+
+forbidden:
+  - 投票
+  - 取中值
+  - 自行补充证据

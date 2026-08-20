@@ -1,0 +1,36 @@
+id: scope-definer
+nameCn: 范围界定专家
+emoji: 🔭
+optional: false
+actions: ["② 枚举"]
+
+compute:
+  tier: low
+  rationale: |
+    枚举是机械的目录穷举，不需要深推理。
+    ⚠️ 但它是**唯一不可事后修复**的动作——漏掉的对象后面没人会发现。
+    首轮跑完必须人工抽查出局池有无误杀；若覆盖不足，提到 high，成本可接受（枚举只跑一次）。
+
+isolation: fresh
+
+delegation:
+  canDelegate: false
+
+tools:
+  need: [read, write, browser]
+  deny: [exec]
+
+skills: [enumerate-subjects]
+
+io:
+  inputs: [brief.subject]
+  outputs: [subjects.json]
+  schemas: [expert-team/schemas/opportunity.schema.json]
+
+gates:
+  - 每个对象必须有 enumerated_from（目录 + 定位 + 检索日期）
+
+forbidden:
+  - 做价值判断、提前淘汰
+  - 靠联想产生候选
+  - 停留在行业层不往下拆

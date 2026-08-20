@@ -1,0 +1,26 @@
+// ⚙️ 领域分析专家 —— agents.entries["domain-analyst"]
+// install.sh 把本文件合并进生成的 openclaw.json 的 agents.entries 下。
+// 正本人格与技能：../../expert-team/experts/domain-analyst/
+//
+// 装配理由：同对比分析专家：不取数，缺数据走取证请求。领域知识由 brief.domainPack 注入，不靠现场检索。
+{
+  "workspace": "<WORKSPACE_ROOT>/domain-analyst",
+  "agentDir": "~/.openclaw/agents/domain-analyst/agent",
+  "identity": { "name": "领域分析专家", "emoji": "⚙️" },
+
+  "model": "anthropic/claude-opus-5",
+  "thinkingDefault": "high",
+  "contextInjection": "always",
+
+  "tools": {
+    "profile": "coding",
+    "deny": ["canvas", "nodes", "cron", "gateway", "image", "exec", "process", "browser", "web_search", "web_fetch", "sessions_spawn"]
+  },
+
+  "skills": ["assess-capability-overlap"],
+
+  // 叶子角色不派发：tools.deny 里已有 sessions_spawn，这里不再声明 allowAgents。
+  // OpenClaw 的默认值本就是「只能派自己」，两条合起来是双保险。
+
+  "sandbox": { "mode": "off" }
+}

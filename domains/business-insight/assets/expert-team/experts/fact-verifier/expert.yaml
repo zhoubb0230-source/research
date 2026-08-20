@@ -1,0 +1,34 @@
+id: fact-verifier
+nameCn: 数据核证专家
+emoji: ✅
+optional: false
+actions: ["④ 核证"]
+
+compute:
+  tier: low
+  rationale: 核证是机械的、重复的、不需要创造力的——这正是它可靠的原因。高档反而会诱发"合理性推断"。
+
+isolation: fresh
+
+delegation:
+  canDelegate: false
+
+tools:
+  need: [read, write, browser]
+  deny: [exec]
+
+skills: [verify-evidence]
+
+io:
+  inputs: [evidence.jsonl 的待核证证据卡]
+  outputs: [更新 verify_status / verified_by / verified_at / conflict_with]
+  schemas: [expert-team/schemas/evidence.schema.json]
+
+gates:
+  - 只有 verified 的证据能进入刻画
+  - 返工路径上的新证据同样必须经本角色核证——回环只回不进，没有旁路
+
+forbidden:
+  - 因为数字"看起来合理"就放过
+  - 在 conflicting 中挑一条保留
+  - 修改分值或补充新证据

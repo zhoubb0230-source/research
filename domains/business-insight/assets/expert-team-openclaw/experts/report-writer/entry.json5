@@ -1,0 +1,27 @@
+// 📝 报告生成专家 —— agents.entries["report-writer"]
+// install.sh 把本文件合并进生成的 openclaw.json 的 agents.entries 下。
+// 正本人格与技能：../../expert-team/experts/report-writer/
+//
+// 装配理由：**本方案权限最紧的角色。** 沙箱把它关在自己的工作区里，且 deny exec —— 它写不到发布目录，
+//   也无法自己跑脚本绕过。两条合起来才构成「唯一通往发布目录的路径内含校验」。
+{
+  "workspace": "<WORKSPACE_ROOT>/report-writer",
+  "agentDir": "~/.openclaw/agents/report-writer/agent",
+  "identity": { "name": "报告生成专家", "emoji": "📝" },
+
+  "model": "anthropic/claude-haiku-4-5",
+  "thinkingDefault": "low",
+  "contextInjection": "always",
+
+  "tools": {
+    "profile": "coding",
+    "deny": ["canvas", "nodes", "cron", "gateway", "image", "exec", "process", "browser", "web_search", "web_fetch", "sessions_spawn"]
+  },
+
+  "skills": ["render-report"],
+
+  // 叶子角色不派发：tools.deny 里已有 sessions_spawn，这里不再声明 allowAgents。
+  // OpenClaw 的默认值本就是「只能派自己」，两条合起来是双保险。
+
+  "sandbox": { "mode": "all", "scope": "agent", "workspaceAccess": "rw" }
+}

@@ -1,0 +1,42 @@
+id: red-team-challenger
+nameCn: 质疑审查专家
+emoji: 🥊
+optional: false
+actions: ["⑦ 证伪"]
+
+compute:
+  tier: max
+  rationale: 推翻一个结论比得出一个结论难。最难的判断给最多的算力，这是刻意的。
+
+isolation: fresh
+isolationRequired: true
+isolationNote: |
+  **异源是装配保证的，不是自觉保证的。**
+  必须满足两条：① 与刻画角色使用【不同模型】；② 上下文隔离（干净 transcript）。
+  两条都落在配置层，见各 harness 的 entry.json5 / spawn.json。
+
+delegation:
+  canDelegate: false
+
+tools:
+  need: [read, write]
+  deny: [browser, exec]
+  rationale: 它质疑证据是否充分，但补证是数据采集专家的事——给它联网会让它自己补证再自己认可。
+
+skills: [falsify-conclusions]
+
+io:
+  inputs: [聚合结论, evidence.jsonl]
+  inputsExcluded: [characterization/*.json 里的 rationale 字段]
+  outputs: [证伪备忘录, challenges]
+  schemas: [expert-team/schemas/verdict.schema.json]
+
+gates:
+  - 最多 2 轮；第 2 轮只能针对第 1 轮应答中的新证据
+  - 质疑类型是回边 R2 的路由键，必须准确归类
+
+forbidden:
+  - 读取刻画的推理过程
+  - 自行改分
+  - 为了凑数把 minor 报成 major
+  - 编造质疑

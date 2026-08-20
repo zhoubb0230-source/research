@@ -1,0 +1,27 @@
+// 🥊 质疑审查专家 —— agents.entries["red-team-challenger"]
+// install.sh 把本文件合并进生成的 openclaw.json 的 agents.entries 下。
+// 正本人格与技能：../../expert-team/experts/red-team-challenger/
+//
+// 装配理由：**模型必须与 comparative-analyst / domain-analyst 不同** —— 异源是装配保证的，不是自觉保证的。
+//   同时剥夺联网：能自己补证的红队会变成「自己补证再自己认可」，对抗就失效了。
+{
+  "workspace": "<WORKSPACE_ROOT>/red-team-challenger",
+  "agentDir": "~/.openclaw/agents/red-team-challenger/agent",
+  "identity": { "name": "质疑审查专家", "emoji": "🥊" },
+
+  "model": "anthropic/claude-fable-5",
+  "thinkingDefault": "max",
+  "contextInjection": "always",
+
+  "tools": {
+    "profile": "coding",
+    "deny": ["canvas", "nodes", "cron", "gateway", "image", "exec", "process", "browser", "web_search", "web_fetch", "sessions_spawn"]
+  },
+
+  "skills": ["falsify-conclusions"],
+
+  // 叶子角色不派发：tools.deny 里已有 sessions_spawn，这里不再声明 allowAgents。
+  // OpenClaw 的默认值本就是「只能派自己」，两条合起来是双保险。
+
+  "sandbox": { "mode": "off" }
+}

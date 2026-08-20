@@ -1,0 +1,26 @@
+// 🎯 首席洞察专家 —— agents.entries["insight-director"]
+// install.sh 把本文件合并进生成的 openclaw.json 的 agents.entries 下。
+// 正本人格与技能：../../expert-team/experts/insight-director/
+//
+// 装配理由：剥夺联网让「禁止引入新的事实性数字」从纪律变成机制。max 档：解读是唯一被允许越过证据边界的动作。
+{
+  "workspace": "<WORKSPACE_ROOT>/insight-director",
+  "agentDir": "~/.openclaw/agents/insight-director/agent",
+  "identity": { "name": "首席洞察专家", "emoji": "🎯" },
+
+  "model": "anthropic/claude-fable-5",
+  "thinkingDefault": "max",
+  "contextInjection": "always",
+
+  "tools": {
+    "profile": "coding",
+    "deny": ["canvas", "nodes", "cron", "gateway", "image", "exec", "process", "browser", "web_search", "web_fetch", "sessions_spawn"]
+  },
+
+  "skills": ["interpret-and-accept"],
+
+  // 叶子角色不派发：tools.deny 里已有 sessions_spawn，这里不再声明 allowAgents。
+  // OpenClaw 的默认值本就是「只能派自己」，两条合起来是双保险。
+
+  "sandbox": { "mode": "off" }
+}

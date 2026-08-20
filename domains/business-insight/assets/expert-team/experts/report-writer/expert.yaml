@@ -1,0 +1,42 @@
+id: report-writer
+nameCn: 报告生成专家
+emoji: 📝
+optional: false
+actions: ["⑩ 成文"]
+
+compute:
+  tier: low
+  rationale: 它只做措辞改写。高档会诱发"让行文更顺畅"的补写，那正是要消灭的。
+
+isolation: fresh
+
+delegation:
+  canDelegate: false
+
+tools:
+  need: [read, write]
+  deny: [browser, exec]
+  sandbox: strict
+  rationale: |
+    **本方案权限最紧的角色。**
+    ① deny exec —— 它不能自己执行命令绕过发布脚本；
+    ② 沙箱限制在自己的工作区 —— 它写不到发布目录。
+    两条合起来保证「唯一通往发布目录的路径是发布脚本」。
+
+skills: [render-report]
+
+io:
+  inputs: [终版结论, 启示, evidence.jsonl]
+  outputs: [drafts/ 报告草稿, baseline.json]
+  schemas: []
+
+gates:
+  - 发布必须经发布闸（由总调度执行），退出码非 0 即未发布
+  - 除报告外还必须产出 baseline.json
+
+forbidden:
+  - 引入新数字、新实体、新因果断言
+  - 删除不确定性标注
+  - 把区间写成点值
+  - 强化确定性措辞
+  - 修改报告去绕过校验

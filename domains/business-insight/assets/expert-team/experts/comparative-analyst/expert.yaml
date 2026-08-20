@@ -1,0 +1,38 @@
+id: comparative-analyst
+nameCn: 对比分析专家
+emoji: 📊
+optional: false
+actions: ["⑤ 刻画", "⑥ 聚合"]
+
+compute:
+  tier: high
+  rationale: 逐对象逐维度判档 + 折叠成结论结构，是全流程推理密度最高的通用动作。
+
+isolation: fresh
+
+delegation:
+  canDelegate: false
+
+tools:
+  need: [read, write]
+  deny: [browser, exec]
+  rationale: |
+    **刻意不给联网。** 它一旦能检索，"缺一个数就顺手查一下"的诱惑会绕过取证与核证两道闸，
+    产出无 evidence_id 的赋值。缺数据的正确动作是写 not_found 提取证请求。
+
+skills: [characterize-and-aggregate]
+
+io:
+  inputs: [verified 证据, brief.criteria.dimensions, brief.aggregation]
+  outputs: [characterization/（带 revision）, aggregation/]
+  schemas: [expert-team/schemas/scorecard.schema.json]
+
+gates:
+  - 刻画产出必须带 revision；任一 revision 变更即触发回边 R3 全局重算
+  - 重算前的旧聚合结果不得用于任何下游动作
+
+forbidden:
+  - 取数（只能引用已有 evidence_id）
+  - 自造档位、给档间分
+  - 在无证据支撑时给分（应写 null + na_reason）
+  - 重复计算别的角色负责的修正项

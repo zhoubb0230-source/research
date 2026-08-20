@@ -1,0 +1,26 @@
+// 📊 对比分析专家 —— agents.entries["comparative-analyst"]
+// install.sh 把本文件合并进生成的 openclaw.json 的 agents.entries 下。
+// 正本人格与技能：../../expert-team/experts/comparative-analyst/
+//
+// 装配理由：**刻意剥夺全部联网能力。** 能检索的分析角色会在缺一个数时顺手查一下，同时绕过取证与核证两道闸。
+{
+  "workspace": "<WORKSPACE_ROOT>/comparative-analyst",
+  "agentDir": "~/.openclaw/agents/comparative-analyst/agent",
+  "identity": { "name": "对比分析专家", "emoji": "📊" },
+
+  "model": "anthropic/claude-opus-5",
+  "thinkingDefault": "high",
+  "contextInjection": "always",
+
+  "tools": {
+    "profile": "coding",
+    "deny": ["canvas", "nodes", "cron", "gateway", "image", "exec", "process", "browser", "web_search", "web_fetch", "sessions_spawn"]
+  },
+
+  "skills": ["characterize-and-aggregate"],
+
+  // 叶子角色不派发：tools.deny 里已有 sessions_spawn，这里不再声明 allowAgents。
+  // OpenClaw 的默认值本就是「只能派自己」，两条合起来是双保险。
+
+  "sandbox": { "mode": "off" }
+}

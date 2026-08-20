@@ -1,0 +1,26 @@
+// 🔭 范围界定专家 —— agents.entries["scope-definer"]
+// install.sh 把本文件合并进生成的 openclaw.json 的 agents.entries 下。
+// 正本人格与技能：../../expert-team/experts/scope-definer/
+//
+// 装配理由：枚举是机械的目录穷举。low 档是刻意的，但它是唯一不可事后修复的动作 —— 首轮跑完必须人工抽查出局池。
+{
+  "workspace": "<WORKSPACE_ROOT>/scope-definer",
+  "agentDir": "~/.openclaw/agents/scope-definer/agent",
+  "identity": { "name": "范围界定专家", "emoji": "🔭" },
+
+  "model": "anthropic/claude-sonnet-5",
+  "thinkingDefault": "low",
+  "contextInjection": "always",
+
+  "tools": {
+    "profile": "coding",
+    "deny": ["canvas", "nodes", "cron", "gateway", "image", "exec", "process", "browser", "sessions_spawn"]
+  },
+
+  "skills": ["enumerate-subjects"],
+
+  // 叶子角色不派发：tools.deny 里已有 sessions_spawn，这里不再声明 allowAgents。
+  // OpenClaw 的默认值本就是「只能派自己」，两条合起来是双保险。
+
+  "sandbox": { "mode": "off" }
+}

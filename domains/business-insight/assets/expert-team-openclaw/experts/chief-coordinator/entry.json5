@@ -1,0 +1,47 @@
+// 🧭 洞察总调度 —— agents.entries["chief-coordinator"]
+// install.sh 把本文件合并进生成的 openclaw.json 的 agents.entries 下。
+// 正本人格与技能：../../expert-team/experts/chief-coordinator/
+{
+  "workspace": "<WORKSPACE_ROOT>/chief-coordinator",
+  "agentDir": "~/.openclaw/agents/chief-coordinator/agent",
+  "identity": { "name": "洞察总调度", "emoji": "🧭" },
+
+  // 字符串形态 = 严格主模型、无 fallback。批次中途换模型会让产出不可比。
+  "model": "anthropic/claude-opus-5",
+  "thinkingDefault": "high",
+
+  // 它是唯一保有完整会话上下文的角色（人从这里进来）。
+  "contextInjection": "always",
+
+  "tools": {
+    "profile": "coding",
+    // 唯一保留 exec 的角色 —— 发布闸只能由它跑。
+    // 反过来剥夺全部联网能力：它一旦能检索就会顺手做内容判断。
+    "deny": [
+      "browser", "web_search", "web_fetch",
+      "canvas", "nodes", "cron", "gateway", "image"
+    ]
+  },
+
+  "skills": ["run-insight-batch", "publish-report"],
+
+  "subagents": {
+    "allowAgents": [
+      "insight-planner",
+      "scope-definer",
+      "data-collector",
+      "fact-verifier",
+      "comparative-analyst",
+      "domain-analyst",
+      "compliance-reviewer",
+      "red-team-challenger",
+      "arbiter",
+      "insight-director",
+      "report-writer"
+    ],
+    "requireAgentId": true,
+    "delegationMode": "prefer"
+  },
+
+  "sandbox": { "mode": "off" }
+}

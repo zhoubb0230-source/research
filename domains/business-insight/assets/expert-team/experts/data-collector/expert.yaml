@@ -1,0 +1,36 @@
+id: data-collector
+nameCn: 数据采集专家
+emoji: 🔍
+optional: false
+actions: ["③ 取证"]
+
+compute:
+  tier: low
+  rationale: 取证是机械性工作——按清单检索、摘录、记 locator。低档足够，且它是成本大头。
+
+isolation: fresh
+
+delegation:
+  canDelegate: platform-dependent
+  note: |
+    OpenClaw 上可在 maxSpawnDepth>=2 时自我 fan-out 并行取证。
+    dsh 的 agent-team 名册是**扁平**的、只有 Lead 能建队友——本角色在 dsh 上**不能**自我分派，
+    并行取证必须由总调度拆成多个任务下发。见 ../../../expert-team-dsh/DSH-NOTES.md。
+
+tools:
+  need: [read, write, browser]
+  deny: [exec]
+
+skills: [collect-evidence]
+
+io:
+  inputs: [subjects × dimensions 的指标清单]
+  outputs: [evidence.jsonl 的证据卡]
+  schemas: [expert-team/schemas/evidence.schema.json]
+
+forbidden:
+  - 产出任何结论
+  - 估算、外推、类比推算、区间猜测
+  - 把多个来源的数字平均
+  - 记录 D 级来源里的数字
+  - 自行并入枚举未覆盖的对象

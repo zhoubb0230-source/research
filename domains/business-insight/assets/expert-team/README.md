@@ -5,6 +5,10 @@
 
 本目录是把设计落到可执行形态的全部资产。**平台中立**——不绑定任何厂商 DSL。
 
+两个 harness 的可直接部署形态在隔壁：
+[`../expert-team-openclaw/`](../expert-team-openclaw/) 与 [`../expert-team-dsh/`](../expert-team-dsh/)。
+它们只做装配，专家定义的正本在本目录的 `experts/`。
+
 ## 目录
 
 ```
@@ -16,9 +20,11 @@ expert-team/
 │   ├── opportunity.schema.json     # 候选机会 + 闸门判定
 │   ├── scorecard.schema.json       # 评分卡（数值字段强制绑定 evidence_ref）
 │   └── verdict.schema.json         # 证伪备忘录 + 质疑 + 裁决
-├── prompts/
-│   ├── _shared-guardrails.md       # 全角色共用护栏（必须内联到每个角色）
-│   └── 00–11-<role>.md             # 12 个角色的系统提示词
+├── BOUNDARIES.md                   # 配置 / 人格 / 技能 三层边界规范 ← 装配前先读
+├── experts/                        # 12 位专家的独立目录（专家定义的唯一真相源）
+│   ├── README.md                   #   名册 + 工具面一览 + 改东西改哪儿
+│   ├── _shared/                    #   GUARDRAILS.md / USER.md / BATCH-LAYOUT.md
+│   └── <agentId>/                  #   expert.yaml + IDENTITY/SOUL/AGENTS + skills/ + README
 ├── orchestration/
 │   ├── pipeline.yaml               # 阶段 + 契约 + 准入条件
 │   ├── model-routing.yaml          # 角色 → 模型 → 参数
@@ -38,11 +44,14 @@ expert-team/
 ## 装配顺序
 
 1. **冻结口径**：按 `rubric/rubric-v1.yaml` 组织业务专家校准（流程见 solution-0002 §6），通过后填 `frozen_at` 并把 `status` 改为 `frozen`。**未冻结不得用于正式筛选。**
-2. **建角色**：每个角色的系统提示词 = `prompts/_shared-guardrails.md` 全文内联 + `prompts/NN-*.md`。护栏放最前面，且置于提示词缓存断点之前。
+2. **建角色**：**不要手工拼提示词。** 每位专家的定义在 `experts/<agentId>/`，
+   由对应 harness 包的安装脚本装配（`../expert-team-openclaw/install.sh`
+   或 `../expert-team-dsh/install.py`）。三层的划分见 `BOUNDARIES.md`。
 3. **接 schema**：按 `orchestration/model-routing.yaml` 的 `structured_output` 字段，给对应角色挂上 `schemas/` 中的 JSON Schema，开启结构化输出与 `strict: true`。
 4. **配模型**：按 `model-routing.yaml` 分配模型与 effort。**C1 红队必须与 S3/S4 异源。**
 5. **建编排**：按 `orchestration/pipeline.yaml` 的阶段与准入条件建流程，参照 `README-platform-mapping.md` 映射到你选的平台。
-6. **挂校验钩子**：P8 出口处接 `checks/verify_report.py`，退出码非 0 即阻断。**这一步不能省。**
+6. **接发布闸**：成文出口处只留一条通往发布目录的路径，路径内含 `checks/verify_report.py`，
+   退出码非 0 即不落盘。**这一步不能省，也不能改成"钩子记录一下"。**
 7. **跑 P1 单机会打通**：先用 1 个已知机会端到端跑通，再放量。
 
 ## 三条不可妥协的约束

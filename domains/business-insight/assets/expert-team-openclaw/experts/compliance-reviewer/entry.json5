@@ -1,0 +1,27 @@
+// 🛡️ 合规审查专家 —— agents.entries["compliance-reviewer"]
+// install.sh 把本文件合并进生成的 openclaw.json 的 agents.entries 下。
+// 正本人格与技能：../../expert-team/experts/compliance-reviewer/
+//
+// 装配理由：**唯一被授予联网的分析类角色。** 管制清单凭记忆作答是本系统最高风险的动作 —— 不联网它就一定错。
+{
+  "workspace": "<WORKSPACE_ROOT>/compliance-reviewer",
+  "agentDir": "~/.openclaw/agents/compliance-reviewer/agent",
+  "identity": { "name": "合规审查专家", "emoji": "🛡️" },
+
+  "model": "anthropic/claude-opus-5",
+  "thinkingDefault": "high",
+  "contextInjection": "always",
+
+  "tools": {
+    "profile": "coding",
+    "alsoAllow": ["browser"],
+    "deny": ["canvas", "nodes", "cron", "gateway", "image", "exec", "process", "sessions_spawn"]
+  },
+
+  "skills": ["screen-export-control"],
+
+  // 叶子角色不派发：tools.deny 里已有 sessions_spawn，这里不再声明 allowAgents。
+  // OpenClaw 的默认值本就是「只能派自己」，两条合起来是双保险。
+
+  "sandbox": { "mode": "off" }
+}
