@@ -106,10 +106,10 @@ depth 1  📐 口径  🔭 枚举  🔍 采集  📊 产业  ⚙️ 技术链  �
 |---|---|---|---|
 | 1 | 渲染前阻断式钩子 | 唯一发布通道内含校验 | hooks 无 deny/cancel 语义 |
 | 2 | 阶段硬门由编排引擎强制 | 由总调度按 playbook 执行 | 无原生阶段网关，**本方案最薄的一环**，见 §5 |
-| 3 | effort `xhigh` / `max` | `thinkingDefault: high` | OpenClaw 无 xhigh/max 档 |
+| 3 | effort `xhigh` / `max` | `thinkingDefault: xhigh` / `max` | ~~OpenClaw 无 xhigh/max 档~~ **已更正：有。** 见下方修订记录 |
 | 4 | 红队"应当"异源 | `context: "isolated"` 平台保证 | 平台能力更强，升级 |
 | 5 | 角色编号 S1/C1/A1 | 中文角色名 + 英文 agentId | 业务可读性 |
-| 6 | 提示词各自维护 | `install.sh` 从 `prompts/` 生成工作区 | 消除正副本漂移 |
+| 6 | 提示词各自维护 | `install.py` 从 `expert-team/experts/` 装配工作区 | 消除正副本漂移 |
 
 ## 5. 已知风险
 
@@ -153,3 +153,24 @@ OpenClaw 官方文档（源文件位于 `github.com/openclaw/openclaw` 的 `docs
 5. [Hooks](https://docs.openclaw.ai/automation/hooks)（访问日期 2026-08-19）
 
 模型档位与价目口径来自 Claude API 官方模型表（口径日期 2026-06-24）。
+
+---
+
+## 修订记录（2026-08-20）
+
+本方案的交付件已按 `business-insight-solution-0006` 重建，三处结论经查官方文档后**不成立**：
+
+| 原文 | 实际 | 影响 |
+|---|---|---|
+| `thinkingDefault` 无 `xhigh` / `max` 档 | **有。** 合法取值 `off \| minimal \| low \| medium \| high \| xhigh \| adaptive \| max` | 质疑审查专家与首席洞察专家恢复 `max`，**无精度损失** |
+| `entries.*.model` 形态不确定 | 字符串形态与 `{ primary, fallbacks }` 均合法；字符串 = 严格无 fallback | 12 位统一用字符串形态 |
+| `tools.deny` 的合法工具名未穷举 | 文档的访问档位示例给出了实际工具名 | 工具面从"只敢 deny 一个"变成逐角色可编排 |
+
+另有一处度量错误：原文说总调度的 `AGENTS.md`「约 18 KB，逼近 20000 上限」——
+那是拿 UTF-8 **字节数**比一个**字符数**上限。实测旧装配 7824 字符，余量充足。
+
+**结论未变的部分**：钩子无 deny/cancel 语义、闸门必须放进唯一发布通道、
+派发深度必须设 2、红队隔离由 `context: "isolated"` 保证——这四条经复核仍然成立。
+
+交付件现状见 `../assets/expert-team-openclaw/README.md` 与 `OPENCLAW-NOTES.md`。
+

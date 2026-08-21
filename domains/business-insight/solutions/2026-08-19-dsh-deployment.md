@@ -143,3 +143,32 @@ pre-step 是**可选加固**，不是替代。要加就拦"写入发布目录"�
    `docs/subsystems/agent-team.md`、`docs/subsystems/skills.md`（同上访问日期）
 
 完整事实清单与四项待校验见 `../assets/expert-team-dsh/DSH-NOTES.md`。
+
+---
+
+## 修订记录（2026-08-20）
+
+本方案的交付件已按 `business-insight-solution-0006` 重建，四处结论经查官方文档后**不成立**：
+
+| 原文 | 实际 | 影响 |
+|---|---|---|
+| 建队友传 `contextMode = isolated` | 取值是 **`'fresh' \| 'fork'`**，没有 `isolated` | 全部改为 `fresh` |
+| 数据采集专家可自我分派并行取证 | **名册扁平，只有 Lead 能建队友**，无嵌套 Team | 并行取证由 Lead 拆任务下发 |
+| `cordis.patch.yml` 的 `agent-loop.agents[]` 列 12 个 id | agent-loop 建的是**顶层 agent**，agent-team 队友是**运行时子会话**；两条都走会得到互不相识的两套 | 现在只声明 **1 个**——Lead |
+| `AgentOptions` 也许支持 per-agent prompt | **只有 `{ provider?, model?, maxTokens? }`**，无 prompt 也无 effort | 人格通道确认为 `spawnTeammate(prompt)`；算力档只能"一档一条 provider 路由" |
+
+另补一项**会直接跑失败**的配置：`agent-team.maxMembers` **默认 8**，本方案要 11 位队友。
+它统计的是曾经 provision 过的每个名字（含失败的），且名字永不复用。
+
+**本次新查清的两件事**：
+
+1. dsh 有"一目录一组合"的 **agent preset** 机制，但它**不是逐专家的**——
+   子代理通过 `composeFrom()` 加入父的组合，从不 `mount()`。一个专家团 = 一个 preset。
+2. **dsh 无法逐队友收窄工具面**。OpenClaw 侧"分析师没有联网能力""报告生成专家写不到
+   发布目录"在这里退化成承诺。验收方式必须跟着变。
+
+**结论未变的部分**：角色定义走 skills 而非配置、把形状未确认的部分隔离到一个可弃文件、
+闸门放脚本不放钩子——这三条经复核仍然成立。
+
+交付件现状见 `../assets/expert-team-dsh/README.md` 与 `DSH-NOTES.md`。
+

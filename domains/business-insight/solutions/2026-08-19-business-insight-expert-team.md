@@ -375,8 +375,9 @@ C2 的判定输出：`verified`（回源命中且数值一致）/ `conflicting`�
 | `README.md` | 资产装配说明与运行顺序 |
 | `rubric/rubric-v1.yaml` | 机器可读的闸门规则、权重、打分锚点 |
 | `schemas/*.json` | 证据卡、机会、评分卡、裁决的 JSON Schema |
-| `prompts/_shared-guardrails.md` | 全角色共用的防编造条款（每个角色提示词必须内联） |
-| `prompts/00–11-*.md` | 12 个角色的系统提示词 |
+| `BOUNDARIES.md` | 配置(T1)/人格(T2)/技能(T3) 三层边界规范（见 solution-0006） |
+| `experts/_shared/GUARDRAILS.md` | 全角色共用的防编造条款（装配脚本自动内联） |
+| `experts/<agentId>/` | 12 位专家的独立目录：装配意图 + 人格三件套 + 技能 + 验收清单 |
 | `orchestration/pipeline.yaml` | 平台中立的阶段编排定义 |
 | `orchestration/model-routing.yaml` | 角色→模型→参数的路由表 |
 | `orchestration/README-platform-mapping.md` | 四类平台的落地映射与验收点 |

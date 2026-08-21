@@ -2,7 +2,7 @@
 
 AI 先进技术调研知识库的一级入口。**先在这里定位领域，再进入领域索引，最后打开正文。**
 
-最后更新：2026-08-19
+最后更新：2026-08-20
 
 ## 领域一览
 
@@ -10,7 +10,7 @@ AI 先进技术调研知识库的一级入口。**先在这里定位领域，再
 |---|---|---|---|---|
 | `agent-platform` | 智能体平台 | Agent 框架/编排/运行时、多智能体协作、工具与记忆、平台化产品（Dify、Coze、Bedrock Agents 等） | [domains/agent-platform/INDEX.md](domains/agent-platform/INDEX.md) | 2 |
 | `ai-coding` | AI Coding 工具 | 编码助手与 Agent（Claude Code、Cursor、Copilot 等）、代码生成/评测、研发流程集成 | [domains/ai-coding/INDEX.md](domains/ai-coding/INDEX.md) | 0 |
-| `business-insight` | 业务洞察 | 新业务/新机会的产业洞察方法、机会筛选框架与评分口径、洞察类多智能体系统设计，以及其产出的机会榜单与深度报告 | [domains/business-insight/INDEX.md](domains/business-insight/INDEX.md) | 5 |
+| `business-insight` | 业务洞察 | 新业务/新机会的产业洞察方法、机会筛选框架与评分口径、洞察类多智能体系统设计，以及其产出的机会榜单与深度报告 | [domains/business-insight/INDEX.md](domains/business-insight/INDEX.md) | 6 |
 
 ## 跨领域索引
 
@@ -22,6 +22,9 @@ AI 先进技术调研知识库的一级入口。**先在这里定位领域，再
 
 | 日期 | 领域 | 条目 | 变更 |
 |---|---|---|---|
+| 2026-08-20 | business-insight | business-insight-solution-0006 | 新增《数字专家的配置、人格与技能边界》：三层边界规范 + 12 位专家的独立目录 |
+| 2026-08-20 | business-insight | business-insight-solution-0003 | 重建 OpenClaw 交付件；按官方文档更正三处结论（thinkingDefault 档位 / model 形态 / 工具名） |
+| 2026-08-20 | business-insight | business-insight-solution-0005 | 重建 dsh 交付件；更正四处（context 取值 / 扁平名册 / agent-loop 拓扑 / AgentOptions 字段） |
 | 2026-08-19 | business-insight | business-insight-solution-0004 | 新增试跑验收契约（八项当场可做的检验）；修正首轮试跑选型理由 |
 | 2026-08-19 | business-insight | business-insight-solution-0005 | 新增《洞察服务的 DeepSeek Harness 试跑方案》+ 试跑包 |
 | 2026-08-19 | business-insight | business-insight-solution-0004 | 骨架修订：新增解读动作与五条回边、分诊拒绝路径、基线快照、trend 吸收 diff |

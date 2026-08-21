@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| 人格与技能正本 | [`../../expert-team/experts/chief-coordinator/`](../../expert-team/experts/chief-coordinator/) |
+| 人格与技能正本 | [`../../../expert-team/experts/chief-coordinator/`](../../../expert-team/experts/chief-coordinator/) |
 | 本目录负责 | 这位专家在 OpenClaw 上的 **T1 配置片段** |
 | 工作区 | `<WORKSPACE_ROOT>/chief-coordinator`（由 `install.sh` 生成） |
 
